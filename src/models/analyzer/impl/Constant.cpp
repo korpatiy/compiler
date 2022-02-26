@@ -1,4 +1,4 @@
-#include "Constant.h"
+#include "../headers/Constant.h"
 
 Constant::Constant(ConstType _constType) : constType(_constType) {
   this->constType = _constType;

@@ -1,5 +1,5 @@
 #include <memory>
-#include "Token.h"
+#include "../headers/Token.h"
 
 Token::Token(TokenType _type) {
   this->tokenType = _type;
