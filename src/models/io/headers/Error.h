@@ -11,14 +11,17 @@ using namespace std;
  */
 class Error {
  private:
+  //Сообщние ошибки
   string message;
-  unique_ptr<TextPosition> textPosition;
+  //Позиция ошибки
+  shared_ptr<TextPosition> textPosition;
  public:
   Error(int _errorCode, int _line, int _pos);
   ~Error() = default;
   /** Показывает сообщение ошибки */
-  void showError();
-  unique_ptr<TextPosition, default_delete<TextPosition>> getTextPosition();
+  basic_string<char, char_traits<char>, allocator<char>> showError();
+  /** Возвращает позицию ошибки */
+  shared_ptr<TextPosition> getTextPosition();
 };
 
 #endif //COMPILER_SRC_MODELS_ERROR_H_

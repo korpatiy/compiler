@@ -6,7 +6,9 @@
  */
 class TextPosition {
  private:
+  //Номер строки
   int lineNumber;
+  //Номер позиции в строке
   int positionNumber;
  public:
   TextPosition(int _line, int _position);
