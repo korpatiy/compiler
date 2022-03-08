@@ -1,5 +1,5 @@
-#ifndef COMPILER_SRC_MODELS_CONSTANT_H_
-#define COMPILER_SRC_MODELS_CONSTANT_H_
+#ifndef COMPILER_SRC_MODELS_VARIANT_H_
+#define COMPILER_SRC_MODELS_VARIANT_H_
 
 #include "string"
 using namespace std;
@@ -17,12 +17,13 @@ enum ConstType {
 /**
  * Абстрактная константа
  */
-class Constant {
+ //todo variant
+class Variant {
  private:
   ConstType constType;
  public:
-  explicit Constant(ConstType _constType);
-  virtual ~Constant() = default;
+  explicit Variant(ConstType _constType);
+  virtual ~Variant() = default;
   ConstType getType();
   virtual string toString() = 0;
 };
@@ -30,49 +31,49 @@ class Constant {
 /**
  * Интовая константа
  */
-class IntConstant : public Constant {
+class IntVariant : public Variant {
  private:
   int value;
  public:
-  explicit IntConstant(int _value);
-  virtual ~IntConstant() = default;
+  explicit IntVariant(int _value);
+  virtual ~IntVariant() = default;
   string toString() override;
 };
 
 /**
  * Вещественная константа
  */
-class RealConstant : public Constant {
+class RealVariant : public Variant {
  private:
   double value;
  public:
-  explicit RealConstant(double _value);
-  virtual ~RealConstant() = default;
+  explicit RealVariant(double _value);
+  virtual ~RealVariant() = default;
   string toString() override;
 };
 
 /**
  * Стринговая константа
  */
-class StringConstant : public Constant {
+class StringVariant : public Variant {
  private:
   string value;
  public:
-  explicit StringConstant(const string &_value);
-  virtual ~StringConstant() = default;
+  explicit StringVariant(const string &_value);
+  virtual ~StringVariant() = default;
   string toString() override;
 };
 
 /**
  * Булевая константа
  */
-class BooleanConstant : public Constant {
+class BooleanVariant : public Variant {
  private:
   bool value;
  public:
-  explicit BooleanConstant(bool _value);
-  virtual ~BooleanConstant() = default;
+  explicit BooleanVariant(bool _value);
+  virtual ~BooleanVariant() = default;
   string toString() override;
 };
 
-#endif //COMPILER_SRC_MODELS_CONSTANT_H_
+#endif //COMPILER_SRC_MODELS_VARIANT_H_

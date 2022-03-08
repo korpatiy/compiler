@@ -13,7 +13,9 @@ class TextPosition {
  public:
   TextPosition(int _line, int _position);
   virtual ~TextPosition() = default;
+  /** Получает номер строки */
   int getLineNumber() const;
+  /** Получает номер позиции в строке */
   int getPosNumber() const;
 };
 

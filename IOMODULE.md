@@ -10,19 +10,31 @@
 должен формировать номер строки и номер позиции в строке
 для каждой литеры.
 
+Определи класс IOModule, отвчающий за работу модуля ввода-вывода:
 ```c++
 class IOModule {
  private:
   //Список ошибок
   vector<Error> errors;
+  //Поток чтения
+  ifstream in;
+  //Текущая строка
+  string currentLine;
+  //Индекс строки
+  int lineIdx;
+  //Индекс позиции в строке
+  int posIdx;
   /** Читет следующую строку из потока */
   void readNextLine();
-  /** Заносит ошибку в список */
-  void logError(int _code, int _line, int _pos);
+  /** Закрывает поток на чтение */
+  void closeScan();
  public:
-  ~IOModule() = default;
-  /** Читает файл */
-  void scan(const string& _filePath);
+  explicit IOModule(const string &_filePath);
+  ~IOModule();
+  /** Читает следуюий символ из строки */
+  basic_string<char> readNextSymbol();
+  /** Заносит ошибку в список */
+  void logError(int _code);
   /** Вовзаращет список ошибок */
   vector<Error> getErrors();
 };
@@ -35,7 +47,20 @@ class IOModule {
 
 Для этого поередлим класс TextPosition, содержащий данные положения ошибки: номер строки и номер позиции в строке:
 ```c++
-
+class TextPosition {
+ private:
+  //Номер строки
+  int lineNumber;
+  //Номер позиции в строке
+  int positionNumber;
+ public:
+  TextPosition(int _line, int _position);
+  virtual ~TextPosition() = default;
+  /** Получает номер строки */
+  int getLineNumber() const;
+  /** Получает номер позиции в строке */
+  int getPosNumber() const;
+};
 ```
 Для хранения ошибки создадим класс Error, содержащий текст ошибки и ее положение:
 
@@ -49,7 +74,7 @@ class Error {
  public:
   Error(int _errorCode, int _line, int _pos);
   ~Error() = default;
-  /** Показывает сообщение ошибки */
+  /** Возвращает сообщение ошибки */
   basic_string<char, char_traits<char>, allocator<char>> showError();
   /** Возвращает позицию ошибки */
   shared_ptr<TextPosition> getTextPosition();
@@ -67,6 +92,7 @@ Error::Error(int _errorCode, int _line, int _pos) {
   this->textPosition = make_unique<TextPosition>(_line, _pos);
 }
 ```
+
 Таблица ошибок хранится в хешмапе в заголовке Codes.h и позволяет обращется к ней за O(1) по коду для поиска необходимого сообщения.
 ```c++
 const std::map<int, std::string> errorTable = {
@@ -76,11 +102,11 @@ const std::map<int, std::string> errorTable = {
     ...}
 ```
 Текст ошибки выводится в следующем формате в методе showMessage:
+//TODO Вывод в листинг с кодом
 ```text
   cout << "Возникла ошибка: " << message
        << ", строка - " << textPosition->getLineNumber()
        << ", позиция - " << textPosition->getPosNumber();
 ```
 
-TODO: вывод при встрече или в конце выполнения!
-TODO: Взаимодействие с анализатором
+![diagram](diagrams/iomodule.drawio.png)

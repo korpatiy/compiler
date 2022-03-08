@@ -6,10 +6,10 @@ TextPosition::TextPosition(int _line, int _position) {
 }
 
 int TextPosition::getLineNumber() const {
-  return lineNumber;
+  return this->lineNumber;
 }
 
 int TextPosition::getPosNumber() const {
-  return positionNumber;
+  return this->positionNumber;
 }
 

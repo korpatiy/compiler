@@ -4,7 +4,6 @@
 #include <iostream>
 #include "vector"
 #include "../../models/io/headers/Error.h"
-#include "../analyzer/LexAnalyzer.h"
 using namespace std;
 
 /**
@@ -14,14 +13,25 @@ class IOModule {
  private:
   //Список ошибок
   vector<Error> errors;
+  //Поток чтения
+  ifstream in;
+  //Текущая строка
+  string currentLine;
+  //Индекс строки
+  int lineIdx;
+  //Индекс позиции в строке
+  int posIdx;
   /** Читет следующую строку из потока */
   void readNextLine();
-  /** Заносит ошибку в список */
-  void logError(int _code, int _line, int _pos);
+  /** Закрывает поток на чтение */
+  void closeScan();
  public:
-  ~IOModule() = default;
-  /** Читает файл */
-  void scan(const string& _filePath);
+  explicit IOModule(const string &_filePath);
+  ~IOModule();
+  /** Читает следуюий символ из строки */
+  basic_string<char> readNextSymbol();
+  /** Заносит ошибку в список */
+  void logError(int _code);
   /** Вовзаращет список ошибок */
   vector<Error> getErrors();
 };

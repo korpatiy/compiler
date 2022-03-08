@@ -1,7 +1,7 @@
 #ifndef COMPILER_SRC_ANALYZERS_TOKEN_H_
 #define COMPILER_SRC_ANALYZERS_TOKEN_H_
 #include <memory>
-#include "Constant.h"
+#include "Variant.h"
 
 /**
  * Типы токенов
@@ -47,14 +47,14 @@ class KeywordToken : public Token {
  */
 class ConstantToken : public Token {
  private:
-  unique_ptr<Constant> constant;
+  unique_ptr<Variant> constant;
  public:
   explicit ConstantToken(int _value);
   explicit ConstantToken(double _value);
   explicit ConstantToken(bool _value);
   explicit ConstantToken(const string& _value);
   virtual ~ConstantToken() = default;
-  unique_ptr<Constant, default_delete<Constant>> getConstant();
+  unique_ptr<Variant, default_delete<Variant>> getConstant();
 };
 
 #endif //COMPILER_SRC_ANALYZERS_TOKEN_H_

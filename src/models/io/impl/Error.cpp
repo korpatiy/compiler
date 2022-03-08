@@ -9,6 +9,7 @@ basic_string<char, char_traits<char>, allocator<char>> Error::showError() {
      << ", строка - " << textPosition->getLineNumber()
      << ", позиция - " << textPosition->getPosNumber();
   return ss.str();
+  //todo
 }
 
 Error::Error(int _errorCode, int _line, int _pos) {

@@ -18,7 +18,7 @@ class Error {
  public:
   Error(int _errorCode, int _line, int _pos);
   ~Error() = default;
-  /** Показывает сообщение ошибки */
+  /** Возвращает сообщение ошибки */
   basic_string<char, char_traits<char>, allocator<char>> showError();
   /** Возвращает позицию ошибки */
   shared_ptr<TextPosition> getTextPosition();

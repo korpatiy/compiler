@@ -14,21 +14,21 @@ IdentifierToken::IdentifierToken() : Token(TT_IDENTIFIER) {}
 KeywordToken::KeywordToken() : Token(TT_KEYWORD) {}
 
 ConstantToken::ConstantToken(int _value) : Token(TT_CONSTANT) {
-  this->constant = make_unique<IntConstant>(_value);
+  this->constant = make_unique<IntVariant>(_value);
 }
 
 ConstantToken::ConstantToken(double _value) : Token(TT_CONSTANT) {
-  this->constant = make_unique<RealConstant>(_value);
+  this->constant = make_unique<RealVariant>(_value);
 }
 
 ConstantToken::ConstantToken(const string& _value) : Token(TT_CONSTANT) {
-  this->constant = make_unique<StringConstant>(_value);
+  this->constant = make_unique<StringVariant>(_value);
 }
 
 ConstantToken::ConstantToken(bool _value) : Token(TT_CONSTANT) {
-  this->constant = make_unique<BooleanConstant>(_value);
+  this->constant = make_unique<BooleanVariant>(_value);
 }
 
-unique_ptr<Constant, default_delete<Constant>> ConstantToken::getConstant() {
+unique_ptr<Variant, default_delete<Variant>> ConstantToken::getConstant() {
   return move(constant);
 }
