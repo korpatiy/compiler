@@ -29,7 +29,7 @@ class IOModule {
   explicit IOModule(const string &_filePath);
   ~IOModule();
   /** Читает следуюий символ из строки */
-  basic_string<char> readNextSymbol();
+  char readNextSymbol();
   /** Заносит ошибку в список */
   void logError(int _code);
   /** Вовзаращет список ошибок */

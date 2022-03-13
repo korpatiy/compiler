@@ -9,14 +9,13 @@ void IOModule::readNextLine() {
   }
 }
 
-basic_string<char> IOModule::readNextSymbol() {
+char IOModule::readNextSymbol() {
   if (posIdx < currentLine.size()) {
-    string symbol(1, currentLine[posIdx++]);
-    return symbol;
+    return currentLine[posIdx++];
   } else {
     readNextLine();
     posIdx = 0;
-    return "";
+    return '\n';
   }
 }
 
@@ -42,4 +41,5 @@ IOModule::IOModule(const string &_filePath) {
 
 IOModule::~IOModule() {
   closeScan();
+  errors.clear();
 }

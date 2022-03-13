@@ -1,31 +1,31 @@
 #include <memory>
 #include "../headers/Token.h"
 
-Token::Token(TokenType _type) {
-  this->tokenType = _type;
+Token::Token(TokenType _tokenType) {
+  this->tokenType = _tokenType;
 }
 
-TokenType Token::getType() {
-  return tokenType;
+Token::TokenType Token::getType() {
+  return this->tokenType;
 }
 
-IdentifierToken::IdentifierToken() : Token(TT_IDENTIFIER) {}
+IdentifierToken::IdentifierToken() : Token(TokenType::TT_IDENTIFIER) {}
 
-KeywordToken::KeywordToken() : Token(TT_KEYWORD) {}
+KeywordToken::KeywordToken() : Token(TokenType::TT_KEYWORD) {}
 
-ConstantToken::ConstantToken(int _value) : Token(TT_CONSTANT) {
+ConstantToken::ConstantToken(int _value) : Token(TokenType::TT_CONSTANT) {
   this->constant = make_unique<IntVariant>(_value);
 }
 
-ConstantToken::ConstantToken(double _value) : Token(TT_CONSTANT) {
+ConstantToken::ConstantToken(double _value) : Token(TokenType::TT_CONSTANT) {
   this->constant = make_unique<RealVariant>(_value);
 }
 
-ConstantToken::ConstantToken(const string& _value) : Token(TT_CONSTANT) {
+ConstantToken::ConstantToken(const string &_value) : Token(TokenType::TT_CONSTANT) {
   this->constant = make_unique<StringVariant>(_value);
 }
 
-ConstantToken::ConstantToken(bool _value) : Token(TT_CONSTANT) {
+ConstantToken::ConstantToken(bool _value) : Token(TokenType::TT_CONSTANT) {
   this->constant = make_unique<BooleanVariant>(_value);
 }
 

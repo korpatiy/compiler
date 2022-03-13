@@ -32,7 +32,7 @@ class IOModule {
   explicit IOModule(const string &_filePath);
   ~IOModule();
   /** Читает следуюий символ из строки */
-  basic_string<char> readNextSymbol();
+  char readNextSymbol();
   /** Заносит ошибку в список */
   void logError(int _code);
   /** Вовзаращет список ошибок */
@@ -93,7 +93,7 @@ Error::Error(int _errorCode, int _line, int _pos) {
 }
 ```
 
-Таблица ошибок хранится в хешмапе в заголовке Codes.h и позволяет обращется к ней за O(1) по коду для поиска необходимого сообщения.
+[Таблица ошибок](src/models/codes/ErrorCodes.h) хранится в хешмапе в заголовке Codes.h и позволяет обращется к ней за O(1) по коду для поиска необходимого сообщения.
 ```c++
 const std::map<int, std::string> errorTable = {
     {1, "ошибка в простом типе"},

@@ -17,7 +17,6 @@ enum ConstType {
 /**
  * Абстрактная константа
  */
- //todo variant
 class Variant {
  private:
   ConstType constType;

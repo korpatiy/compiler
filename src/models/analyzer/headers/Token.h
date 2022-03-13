@@ -2,26 +2,26 @@
 #define COMPILER_SRC_ANALYZERS_TOKEN_H_
 #include <memory>
 #include "Variant.h"
-
-/**
- * Типы токенов
- */
-enum TokenType {
-  TT_IDENTIFIER,
-  TT_KEYWORD,
-  TT_CONSTANT
-};
+using namespace std;
 
 /**
  * Абстрактный токен
  */
 class Token {
+ public:
+  /** Типы токенов */
+  enum TokenType {
+    TT_IDENTIFIER,
+    TT_KEYWORD,
+    TT_CONSTANT
+  };
  private:
   TokenType tokenType;
  public:
-  explicit Token(TokenType token_type);
-  TokenType getType();
+  Token() = default;
+  Token(TokenType token_type);
   virtual ~Token() = default;
+  TokenType getType();
 };
 
 /**
@@ -52,7 +52,7 @@ class ConstantToken : public Token {
   explicit ConstantToken(int _value);
   explicit ConstantToken(double _value);
   explicit ConstantToken(bool _value);
-  explicit ConstantToken(const string& _value);
+  explicit ConstantToken(const string &_value);
   virtual ~ConstantToken() = default;
   unique_ptr<Variant, default_delete<Variant>> getConstant();
 };

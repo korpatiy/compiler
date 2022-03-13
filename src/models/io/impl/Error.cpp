@@ -1,7 +1,7 @@
 #include <iostream>
 #include <sstream>
 #include "../headers/Error.h"
-#include "../../Codes.h"
+#include "../../codes/ErrorCodes.h"
 
 basic_string<char, char_traits<char>, allocator<char>> Error::showError() {
   stringstream ss;
