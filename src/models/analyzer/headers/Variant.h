@@ -44,9 +44,9 @@ class IntVariant : public Variant {
  */
 class RealVariant : public Variant {
  private:
-  double value;
+  float value;
  public:
-  explicit RealVariant(double _value);
+  explicit RealVariant(float _value);
   virtual ~RealVariant() = default;
   string toString() override;
 };

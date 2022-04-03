@@ -4,23 +4,37 @@ void IOModule::readNextLine() {
   if (in.is_open()) {
     lineIdx++;
     getline(in, currentLine);
+    out << currentLine + "\n";
     if (in.eof())
-      closeScan();
+      in.close();
+  } else {
+    reachedEndOfFile = true;
   }
 }
 
-char IOModule::readNextSymbol() {
+char IOModule::scanNextSymbol() {
   if (posIdx < currentLine.size()) {
     return currentLine[posIdx++];
   } else {
     readNextLine();
-    posIdx = 0;
-    return '\n';
+    if (!reachedEndOfFile) {
+      posIdx = 0;
+      return '\n';
+    } else {
+      return '\0';
+    }
   }
+}
+
+char IOModule::peekSymbol(int _offset) {
+  return posIdx + _offset < currentLine.size() ?
+         currentLine[posIdx + _offset] :
+         '\n';
 }
 
 void IOModule::closeScan() {
   in.close();
+  out.close();
 }
 
 vector<Error> IOModule::getErrors() {
@@ -29,6 +43,8 @@ vector<Error> IOModule::getErrors() {
 
 void IOModule::logError(int _code) {
   this->errors.emplace_back(_code, lineIdx, posIdx);
+  out << string(posIdx, ' ') << "^" << "\n";
+  out << errors.back().showError() << "\n";
 }
 
 IOModule::IOModule(const string &_filePath) {
@@ -36,6 +52,7 @@ IOModule::IOModule(const string &_filePath) {
   posIdx = 0;
   currentLine = "";
   in.open(_filePath, ios::in);
+  out.open("C:/Users/Slava/Desktop/compiler/src/listing.txt");
   readNextLine();
 }
 

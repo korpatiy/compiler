@@ -1,34 +1,52 @@
 #include <memory>
+#include <utility>
 #include "../headers/Token.h"
 
-Token::Token(TokenType _tokenType) {
+Token::Token(Token::TokenType _tokenType, TokenCode _tokenCode) {
   this->tokenType = _tokenType;
+  this->tokenCode = _tokenCode;
 }
 
 Token::TokenType Token::getType() {
   return this->tokenType;
 }
 
-IdentifierToken::IdentifierToken() : Token(TokenType::TT_IDENTIFIER) {}
-
-KeywordToken::KeywordToken() : Token(TokenType::TT_KEYWORD) {}
-
-ConstantToken::ConstantToken(int _value) : Token(TokenType::TT_CONSTANT) {
-  this->constant = make_unique<IntVariant>(_value);
+TokenCode Token::getCode() {
+  return this->tokenCode;
 }
 
-ConstantToken::ConstantToken(double _value) : Token(TokenType::TT_CONSTANT) {
-  this->constant = make_unique<RealVariant>(_value);
+string Token::toString() {
+  //todo маппинг
+  //return keywordMap.at(tokenCode);
+  return "";
 }
 
-ConstantToken::ConstantToken(const string &_value) : Token(TokenType::TT_CONSTANT) {
-  this->constant = make_unique<StringVariant>(_value);
+IdentifierToken::IdentifierToken(string _identName) : Token(TokenType::TT_IDENTIFIER, TokenCode::ident) {
+  this->identName = std::move(_identName);
 }
 
-ConstantToken::ConstantToken(bool _value) : Token(TokenType::TT_CONSTANT) {
-  this->constant = make_unique<BooleanVariant>(_value);
+KeywordToken::KeywordToken(TokenCode _tokenCode) : Token(TokenType::TT_KEYWORD, _tokenCode) {}
+
+ConstantToken::ConstantToken(int _value) : Token(TokenType::TT_CONSTANT, TokenCode::intConst) {
+  this->constant = make_shared<IntVariant>(_value);
 }
 
-unique_ptr<Variant, default_delete<Variant>> ConstantToken::getConstant() {
+ConstantToken::ConstantToken(float _value) : Token(TokenType::TT_CONSTANT, TokenCode::realConst) {
+  this->constant = make_shared<RealVariant>(_value);
+}
+
+ConstantToken::ConstantToken(const string &_value) : Token(TokenType::TT_CONSTANT, TokenCode::stringConst) {
+  this->constant = make_shared<StringVariant>(_value);
+}
+
+ConstantToken::ConstantToken(bool _value) : Token(TokenType::TT_CONSTANT, TokenCode::booleanConst) {
+  this->constant = make_shared<BooleanVariant>(_value);
+}
+
+shared_ptr<Variant> ConstantToken::getConstant() {
   return move(constant);
+}
+
+string ConstantToken::toString() {
+  return getConstant()->toString();
 }

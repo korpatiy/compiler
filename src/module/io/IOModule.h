@@ -15,12 +15,16 @@ class IOModule {
   vector<Error> errors;
   //Поток чтения
   ifstream in;
+  //Поток записи
+  ofstream out;
   //Текущая строка
   string currentLine;
   //Индекс строки
   int lineIdx;
   //Индекс позиции в строке
   int posIdx;
+  //Флаг достижения конца файла
+  bool reachedEndOfFile = false;
   /** Читет следующую строку из потока */
   void readNextLine();
   /** Закрывает поток на чтение */
@@ -29,7 +33,9 @@ class IOModule {
   explicit IOModule(const string &_filePath);
   ~IOModule();
   /** Читает следуюий символ из строки */
-  char readNextSymbol();
+  char scanNextSymbol();
+  /** Читает следующий символ от текущго с заданным промежутком [offset] */
+  char peekSymbol(int _offset = 0);
   /** Заносит ошибку в список */
   void logError(int _code);
   /** Вовзаращет список ошибок */

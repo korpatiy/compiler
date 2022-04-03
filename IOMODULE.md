@@ -18,12 +18,16 @@ class IOModule {
   vector<Error> errors;
   //Поток чтения
   ifstream in;
+  //Поток записи
+  ofstream out;
   //Текущая строка
   string currentLine;
   //Индекс строки
   int lineIdx;
   //Индекс позиции в строке
   int posIdx;
+  //Флаг достижения конца файла
+  bool reachedEndOfFile = false;
   /** Читет следующую строку из потока */
   void readNextLine();
   /** Закрывает поток на чтение */
@@ -32,7 +36,9 @@ class IOModule {
   explicit IOModule(const string &_filePath);
   ~IOModule();
   /** Читает следуюий символ из строки */
-  char readNextSymbol();
+  char scanNextSymbol();
+  /** Читает следующий символ от текущго с заданным промежутком [offset] */
+  char peekSymbol(int _offset = 0);
   /** Заносит ошибку в список */
   void logError(int _code);
   /** Вовзаращет список ошибок */
@@ -93,7 +99,7 @@ Error::Error(int _errorCode, int _line, int _pos) {
 }
 ```
 
-[Таблица ошибок](src/models/codes/ErrorCodes.h) хранится в хешмапе в заголовке Codes.h и позволяет обращется к ней за O(1) по коду для поиска необходимого сообщения.
+[Таблица ошибок](src/models/codes/ErrorCodes.h) хранится в хешмапе в заголовке ErrorCodes.h и позволяет обращется к ней за O(1) по коду для поиска необходимого сообщения.
 ```c++
 const std::map<int, std::string> errorTable = {
     {1, "ошибка в простом типе"},
@@ -102,11 +108,19 @@ const std::map<int, std::string> errorTable = {
     ...}
 ```
 Текст ошибки выводится в следующем формате в методе showMessage:
-//TODO Вывод в листинг с кодом
+* сначала указатель "^" на место ошибки в строке, который указывает на текущуюзу позицию
+* затем сообщение в формате <текст ошибки>, <номер строки>, <позиция>
+
+Пример:
 ```text
-  cout << "Возникла ошибка: " << message
-       << ", строка - " << textPosition->getLineNumber()
-       << ", позиция - " << textPosition->getPosNumber();
+{ test
+program primer1;
+                ^
+*** комментарий не закрыт, строка - 2, позиция - 16
 ```
+
+Полный листинг формируется в выходной файл listing.txt.
+
+### Диаграмма классов
 
 ![diagram](diagrams/iomodule.drawio.png)

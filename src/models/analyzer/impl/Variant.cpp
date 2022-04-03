@@ -16,7 +16,7 @@ string IntVariant::toString() {
   return to_string(value);
 }
 
-RealVariant::RealVariant(double _value) : Variant(CT_REAL), value(_value) {
+RealVariant::RealVariant(float _value) : Variant(CT_REAL), value(_value) {
   this->value = _value;
 }
 

@@ -2,6 +2,7 @@
 #define COMPILER_SRC_ANALYZERS_TOKEN_H_
 #include <memory>
 #include "Variant.h"
+#include "../../codes/TokenCode.h"
 using namespace std;
 
 /**
@@ -17,19 +18,27 @@ class Token {
   };
  private:
   TokenType tokenType;
+  TokenCode tokenCode;
  public:
   Token() = default;
-  Token(TokenType token_type);
+  Token(TokenType _tokenType, TokenCode _tokenCode);
   virtual ~Token() = default;
+  /** Возвращет строковое значение токена */
+  virtual string toString();
+  /** Возвращает тип токена */
   TokenType getType();
+  /** Возвращает код токена */
+  TokenCode getCode();
 };
 
 /**
  * Токен идентификтор
  */
 class IdentifierToken : public Token {
+ private:
+  string identName;
  public:
-  explicit IdentifierToken();
+  explicit IdentifierToken(string _identName);
   virtual ~IdentifierToken() = default;
 };
 
@@ -38,7 +47,7 @@ class IdentifierToken : public Token {
  */
 class KeywordToken : public Token {
  public:
-  explicit KeywordToken();
+  explicit KeywordToken(TokenCode _tokenCode);
   virtual ~KeywordToken() = default;
 };
 
@@ -47,14 +56,21 @@ class KeywordToken : public Token {
  */
 class ConstantToken : public Token {
  private:
-  unique_ptr<Variant> constant;
+  shared_ptr<Variant> constant;
  public:
+  /** Целочисленная константа */
   explicit ConstantToken(int _value);
-  explicit ConstantToken(double _value);
+  /** Вещественная константа */
+  explicit ConstantToken(float _value);
+  /** Булева константа */
   explicit ConstantToken(bool _value);
+  /** Строковая константа */
   explicit ConstantToken(const string &_value);
   virtual ~ConstantToken() = default;
-  unique_ptr<Variant, default_delete<Variant>> getConstant();
+  /** Возвращает константу */
+  shared_ptr<Variant> getConstant();
+  /** Возвращет строковое значение константы */
+  string toString() override;
 };
 
 #endif //COMPILER_SRC_ANALYZERS_TOKEN_H_

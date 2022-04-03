@@ -4,12 +4,8 @@
 #include "../../codes/ErrorCodes.h"
 
 basic_string<char, char_traits<char>, allocator<char>> Error::showError() {
-  stringstream ss;
-  ss << "Возникла ошибка: " << message
-     << ", строка - " << textPosition->getLineNumber()
-     << ", позиция - " << textPosition->getPosNumber();
-  return ss.str();
-  //todo
+  return "*** " + message + ", строка - " + to_string(textPosition->getLineNumber())
+      + ", позиция - " + to_string(textPosition->getPosNumber());
 }
 
 Error::Error(int _errorCode, int _line, int _pos) {
