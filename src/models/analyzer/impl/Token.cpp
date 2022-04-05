@@ -16,13 +16,14 @@ TokenCode Token::getCode() {
 }
 
 string Token::toString() {
-  //todo маппинг
-  //return keywordMap.at(tokenCode);
-  return "";
+  return toStringMap.at(tokenCode);
 }
 
 IdentifierToken::IdentifierToken(string _identName) : Token(TokenType::TT_IDENTIFIER, TokenCode::ident) {
   this->identName = std::move(_identName);
+}
+string IdentifierToken::toString() {
+  return identName;
 }
 
 KeywordToken::KeywordToken(TokenCode _tokenCode) : Token(TokenType::TT_KEYWORD, _tokenCode) {}

@@ -1,2 +1,10 @@
-{ test program }
-program primer1;
+program Hello;
+const
+  year = 2000;
+  pi = 3.141592;
+type
+  tInteger = ^integer;
+  tReal = ^real;
+begin
+  writeln ('Hello World')
+end.

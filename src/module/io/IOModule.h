@@ -36,8 +36,8 @@ class IOModule {
   char scanNextSymbol();
   /** Читает следующий символ от текущго с заданным промежутком [offset] */
   char peekSymbol(int _offset = 0);
-  /** Заносит ошибку в список */
-  void logError(int _code);
+  /** Заносит ошибку в список, сдвигает коретку при необходиомсти */
+  void logError(int _code, int _offset = 0);
   /** Вовзаращет список ошибок */
   vector<Error> getErrors();
 };

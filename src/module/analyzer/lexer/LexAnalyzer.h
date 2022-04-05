@@ -1,7 +1,7 @@
 #ifndef COMPILER_SRC_ANALYZERS_LEXANALYZER_H_
 #define COMPILER_SRC_ANALYZERS_LEXANALYZER_H_
-#include "../io/IOModule.h"
-#include "../../models/analyzer/headers/Token.h"
+#include "../../io/IOModule.h"
+#include "../../../models/analyzer/headers/Token.h"
 #include <string>
 #include <memory>
 using namespace std;
@@ -11,7 +11,7 @@ using namespace std;
  */
 class LexAnalyzer {
  private:
-  unique_ptr<IOModule> ioModule;
+  shared_ptr<IOModule> ioModule;
 
   /* Максимальное целочисленное значение */
   const int MAX_INT_SIZE = INT_MAX;
@@ -42,6 +42,7 @@ class LexAnalyzer {
   ~LexAnalyzer() = default;
   /** Сканирует следующий токен */
   shared_ptr<Token> scanNextToken();
+  shared_ptr<IOModule> getIOModule();
 };
 
 #endif //COMPILER_SRC_ANALYZERS_LEXANALYZER_H_

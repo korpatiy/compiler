@@ -95,7 +95,7 @@ shared_ptr класса TextPosition. (shared_ptr гарантирует нам,
 ```c++
 Error::Error(int _errorCode, int _line, int _pos) {
   this->message = errorTable.at(_errorCode);
-  this->textPosition = make_unique<TextPosition>(_line, _pos);
+  this->textPosition = make_shared<TextPosition>(_line, _pos);
 }
 ```
 

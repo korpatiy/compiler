@@ -40,6 +40,7 @@ class IdentifierToken : public Token {
  public:
   explicit IdentifierToken(string _identName);
   virtual ~IdentifierToken() = default;
+  string toString() override;
 };
 
 /**

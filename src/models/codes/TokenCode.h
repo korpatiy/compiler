@@ -118,9 +118,12 @@ enum TokenCode {
   stringConst = 302,
   /** Булевая константа */
   booleanConst = 303,
+
+  /** '\0' */
+  endOfFile = 400
 };
 
-/** Таблица сключевых слов: <название> - <код токена> */
+/** Таблица ключевых слов: <название> - <код токена> */
 const map<string, TokenCode> keywordMap = {
     {"do", doSy},
     {"if", ifSy},
@@ -158,6 +161,73 @@ const map<string, TokenCode> keywordMap = {
     {"program", programSy},
     {"function", functionSy},
     {"procedure", procedureSy},
+};
+
+/** Таблица строковых представлений токенов */
+const map<TokenCode, string> toStringMap = {
+    {star, "*"},
+    {slash, "/"},
+    {TokenCode::equal, "="},
+    {comma, ","},
+    {semicolon, ";"},
+    {colon, ":"},
+    {point, "."},
+    {arrow, "^"},
+    {leftPar, "("},
+    {rightPar, ")"},
+    {lBracket, "["},
+    {rBracket, "]"},
+    {flPar, "{"},
+    {frPar, "}"},
+    {later, "<"},
+    {TokenCode::greater, ">"},
+    {laterEqual, "<="},
+    {laterEqual, ">="},
+    {laterGreater, "<>"},
+    {TokenCode::plus, "+"},
+    {TokenCode::minus, "-"},
+    {lComment, "(*"},
+    {rComment, "*)"},
+    {assign, ":="},
+    {twoPoints, ".."},
+
+    {doSy, "do"},
+    {ifSy, "if"},
+    {inSy, "in"},
+    {ofSy, "of"},
+    {orSy, "or"},
+    {toSy, "to"},
+    {andSy, "and"},
+    {divSy, "div"},
+    {endSy, "end"},
+    {forSy, "for"},
+    {modSy, "mod"},
+    {nilSy, "nil"},
+    {notSy, "not"},
+    {setSy, "set"},
+    {varSy, "var"},
+    {caseSy, "case"},
+    {elseSy, "else"},
+    {fileSy, "file"},
+    {gotoSy, "goto"},
+    {thenSy, "then"},
+    {typeSy, "type"},
+    {withSy, "with"},
+    {arraySy, "array"},
+    {beginSy, "begin"},
+    {constSy, "const"},
+    {labelSy, "label"},
+    {untilSy, "until"},
+    {whileSy, "while"},
+    {downtoSy, "downto"},
+    {packedSy, "packed"},
+    {recordSy, "record"},
+    {repeatSy, "repeat"},
+    {programSy, "program"},
+    {functionSy, "function"},
+    {procedureSy, "procedure"},
+
+    {endOfFile, "end of file"}
 };
 
 #endif //COMPILER_SRC_MODELS_CODES_TOKENCODE_H_

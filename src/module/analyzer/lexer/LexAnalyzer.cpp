@@ -1,5 +1,5 @@
 #include "LexAnalyzer.h"
-#include "../../models/codes/ErrorCodes.h"
+#include "../../../models/codes/ErrorCodes.h"
 
 shared_ptr<Token> LexAnalyzer::scanNextToken() {
   currentChar = ioModule->scanNextSymbol();
@@ -47,10 +47,12 @@ shared_ptr<Token> LexAnalyzer::scanNextToken() {
       break;
     case ']': token = make_shared<KeywordToken>(TokenCode::rBracket);
       break;
+    case '\0': token = make_shared<KeywordToken>(TokenCode::endOfFile);
+      break;
     default:
       if (isdigit(currentChar))
         token = scanNumber();
-      else if (isalnum(currentChar))
+      else if (isalpha(currentChar))
         token = scanBlockName();
       else {
         /* Запрещенный символ */
@@ -108,29 +110,24 @@ shared_ptr<Token> LexAnalyzer::scanNumber() {
     else {
       /* Целая константа превышает предел */
       ioModule->logError(203);
-      nextChar = ioModule->peekSymbol();
       break;
     }
     nextChar = ioModule->peekSymbol();
+    if (!isdigit(nextChar) && nextChar != ';' && nextChar != '\n') {
+      ioModule->logError(201);
+      nextChar = ioModule->peekSymbol(1);
+      currentChar = ioModule->scanNextSymbol();
+    }
   }
 
   /* Целая константа */
   if (nextChar != '.') {
-    /*if (nextChar != ';')
-      *//* Должен идти символ ';' *//*
-      ioModule->logError(14);*/
     return move(make_shared<ConstantToken>(number));
   }
 
   /* Пропускаем точку */
   ioModule->scanNextSymbol();
   nextChar = ioModule->peekSymbol();
-
-  if (!isdigit(nextChar)) {
-    /* Ошибка в вещественной константе: должна идти цифра */
-    ioModule->logError(201);
-    return move(make_shared<ConstantToken>(number));
-  }
 
   int realNumberPart = 0;
   int rad = 1;
@@ -148,6 +145,11 @@ shared_ptr<Token> LexAnalyzer::scanNumber() {
       break;
     }
     nextChar = ioModule->peekSymbol();
+    if (!isdigit(nextChar) && nextChar != ';' && nextChar != '\n') {
+      ioModule->logError(201);
+      nextChar = ioModule->peekSymbol(1);
+      currentChar = ioModule->scanNextSymbol();
+    }
   }
 
   float realNumber = static_cast<float>(number) +
@@ -298,4 +300,9 @@ shared_ptr<Token> LexAnalyzer::scanFrPar() {
   /* Комментарий не открыт */
   ioModule->logError(85);
   return move(make_shared<KeywordToken>(TokenCode::frPar));
+}
+
+shared_ptr<IOModule> LexAnalyzer::getIOModule() {
+  /* В данном случае не передаем управление, модуль ввода/ввода все еще пренадлежит лексеру, но управляет им еще и синатксер */
+  return ioModule;
 }

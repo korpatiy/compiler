@@ -41,9 +41,10 @@ vector<Error> IOModule::getErrors() {
   return errors;
 }
 
-void IOModule::logError(int _code) {
-  this->errors.emplace_back(_code, lineIdx, posIdx);
-  out << string(posIdx, ' ') << "^" << "\n";
+void IOModule::logError(int _code, int _offset) {
+  int offsetPos = posIdx - _offset;
+  this->errors.emplace_back(_code, lineIdx, offsetPos);
+  out << string(offsetPos, ' ') << "^" << "\n";
   out << errors.back().showError() << "\n";
 }
 
