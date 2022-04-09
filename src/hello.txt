@@ -3,8 +3,14 @@ const
   year = 2000;
   pi = 3.141592;
 type
-  tInteger = ^integer;
+  tInteger = integer;
   tReal = ^real;
+var
+  i, j, k : integer;
+  d : real;
+  s : string;
+  pInt : pInteger;
+  flag : boolean;
 begin
   writeln ('Hello World')
 end.

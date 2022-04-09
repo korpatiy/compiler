@@ -12,18 +12,25 @@ void SyntaxAnalyzer::accept(TokenCode tokenCode) {
     int offset = currentToken->toString().size();
     /* Должно быть служебное слово PROGRAM */
     switch (tokenCode) {
-      /* Должно быть служебное слово PROGRAM */
-      case programSy:lexer->getIOModule()->logError(3, offset);
+      case programSy:
+        /* Должно быть служебное слово PROGRAM */
+        lexer->getIOModule()->logError(3, offset);
         break;
+      case semicolon:
         /* Должен идти символ  ';' */
-      case semicolon:lexer->getIOModule()->logError(14, offset);
+        lexer->getIOModule()->logError(14, offset);
         break;
-        /* Должен идти символ  '=' */
       case TokenCode::equal:
+        /* Должен идти символ  '=' */
         lexer->getIOModule()->logError(16, offset);
         break;
+      case arrow:
         /* Ошибка в типе */
-      case arrow:lexer->getIOModule()->logError(10, offset);
+        lexer->getIOModule()->logError(10, offset);
+        break;
+      case colon:
+        /* Должен идти символ  ':' */
+        lexer->getIOModule()->logError(5, offset);
         break;
       default:break;
     }
@@ -34,26 +41,30 @@ void SyntaxAnalyzer::scanNextToken() {
   currentToken = lexer->scanNextToken();
 }
 
-void SyntaxAnalyzer::skipTo(TokenCode tokenCode) {
-  while (currentToken->getCode() != tokenCode)
+void SyntaxAnalyzer::skipTo(TokenCode code) {
+  while (currentToken->getCode() != code) {
     scanNextToken();
-  //todo \0?
+    if (currentToken->getCode() == endOfFile)
+      break;
+  }
+}
+
+void SyntaxAnalyzer::skipTo(const set<enum TokenCode> &block) {
+  while (block.count(currentToken->getCode()) != 1) {
+    scanNextToken();
+    if (currentToken->getCode() == endOfFile)
+      break;
+  }
 }
 
 bool SyntaxAnalyzer::isSymbolBelongTo(const set<TokenCode> &block) {
   return block.count(currentToken->getCode()) == 1;
 }
 
-void SyntaxAnalyzer::isBelongOrSkipTo(const set<enum TokenCode> &currentBlock, TokenCode block) {
+void SyntaxAnalyzer::isBelongOrSkipTo(const set<enum TokenCode> &currentBlock, int errorCode) {
   if (!isSymbolBelongTo(currentBlock)) {
-    if (block == beginSy) {
-      /* Ожидался BEGIN или раздел описаний */
-      lexer->getIOModule()->logError(17);
-    } else {
-      /* Ошибка в разделе описаний */
-      lexer->getIOModule()->logError(18);
-    }
-    skipTo(block);
+    lexer->getIOModule()->logError(errorCode);
+    skipTo(currentBlock);
   }
 }
 
@@ -63,34 +74,45 @@ void SyntaxAnalyzer::program() {
   accept(ident);
   accept(semicolon);
   descriptionSection();
+  operatorSection();
   accept(point);
 }
 
 void SyntaxAnalyzer::descriptionSection() {
-  /* Ищем блок из раздела описния или пропускаем до BEGIN */
-  isBelongOrSkipTo(descriptionBlockSet, beginSy);
+  auto descriptionSet = descriptionBlockSet;
+  descriptionSet.insert(beginSy);
+  /* Если нет раздела описаний, то идем дальше */
+  isBelongOrSkipTo(descriptionSet, 18);
+  if (currentToken->getCode() == beginSy) return;
 
-  /* Константы */
-  if (currentToken->getCode() == constSy)
-    constBlock();
+  /* Есть раздел описаний */
+  if (isSymbolBelongTo(descriptionBlockSet)) {
+    /* Константы */
+    isBelongOrSkipTo(descriptionSet, 18);
+    descriptionSet.erase(constSy);
+    if (currentToken->getCode() == constSy)
+      constBlock();
 
-  /* Типы */
-  if (currentToken->getCode() == typeSy)
-    typeBlock();
+    /* Типы */
+    isBelongOrSkipTo(descriptionSet, 18);
+    descriptionSet.erase(typeSy);
+    if (currentToken->getCode() == typeSy)
+      typeBlock();
 
-  /* Переменные */
-  if (currentToken->getCode() == varSy)
-    varBlock();
+    /* Переменные */
+    isBelongOrSkipTo(descriptionSet, 18);
+    descriptionSet.erase(varSy);
+    if (currentToken->getCode() == varSy)
+      varBlock();
+  }
 }
 
 void SyntaxAnalyzer::constBlock() {
-  if (currentToken->getCode() == constSy) {
-    accept(constSy);
-    do {
-      constDescription();
-      accept(semicolon);
-    } while (currentToken->getCode() == ident);
-  }
+  accept(constSy);
+  do {
+    constDescription();
+    accept(semicolon);
+  } while (currentToken->getCode() == ident);
 }
 
 void SyntaxAnalyzer::constDescription() {
@@ -102,7 +124,7 @@ void SyntaxAnalyzer::constDescription() {
 }
 
 void SyntaxAnalyzer::constRecognition() {
-  if (isSymbolBelongTo(baseTypeCodeSet)) {
+  if (isSymbolBelongTo(baseTypeCodeSet) || currentToken->getCode() == ident) {
     switch (currentToken->getCode()) {
       case intConst:accept(intConst);
         break;
@@ -111,6 +133,7 @@ void SyntaxAnalyzer::constRecognition() {
       case stringConst:accept(stringConst);
         break;
       case booleanConst:accept(booleanConst);
+      case ident: accept(ident);
         break;
       default:break;
     }
@@ -118,13 +141,11 @@ void SyntaxAnalyzer::constRecognition() {
 }
 
 void SyntaxAnalyzer::typeBlock() {
-  if (currentToken->getCode() == typeSy) {
-    accept(typeSy);
-    do {
-      typeDescription();
-      accept(semicolon);
-    } while (currentToken->getCode() == ident);
-  }
+  accept(typeSy);
+  do {
+    typeDescription();
+    accept(semicolon);
+  } while (currentToken->getCode() == ident);
 }
 
 void SyntaxAnalyzer::typeDescription() {
@@ -135,35 +156,56 @@ void SyntaxAnalyzer::typeDescription() {
   }
 }
 
-void SyntaxAnalyzer::typeRecognition() {
-  accept(arrow);
-  referenceType();
-}
-
-void SyntaxAnalyzer::referenceType() {
-  if (baseTypeSet.count(currentToken->toString()) != 1) {/* Неизвестный тип */
-    lexer->getIOModule()->logError(400, currentToken->toString().size());
-  }
-  accept(ident);
-}
-
 void SyntaxAnalyzer::varBlock() {
-  if (currentToken->getCode() == varSy) {
-    accept(varSy);
-    do {
-      typeDescription();
-      auto kek = currentToken->toString();
-      accept(semicolon);
-    } while (currentToken->getCode() == ident);
-  }
+  accept(varSy);
+  do {
+    varDescription();
+    accept(semicolon);
+  } while (currentToken->getCode() == ident);
 }
 
 void SyntaxAnalyzer::varDescription() {
-
+  if (currentToken->getCode() == ident) {
+    accept(ident);
+    while (currentToken->getCode() == comma) {
+      accept(comma);
+      accept(ident);
+    }
+    accept(colon);
+    typeRecognition();
+  }
 }
 
-void SyntaxAnalyzer::varRecognition() {
+void SyntaxAnalyzer::typeRecognition() {
+  auto set = baseTypeCodeSet;
+  set.insert(arrow);
+  set.insert(ident);
+  isBelongOrSkipTo(set, 10);
 
+  if (currentToken->getCode() == arrow) {
+    referenceType();
+  } else
+    simpleType();
+}
+
+void SyntaxAnalyzer::referenceType() {
+  accept(arrow);
+  scanTypeAndAccept();
+}
+
+void SyntaxAnalyzer::simpleType() {
+  scanTypeAndAccept();
+}
+
+void SyntaxAnalyzer::scanTypeAndAccept() {
+  accept(ident);
+}
+
+void SyntaxAnalyzer::operatorSection() {
+  if (currentToken->getCode() != beginSy) {
+    lexer->getIOModule()->logError(18);
+    skipTo(beginSy);
+  }
 }
 
 void SyntaxAnalyzer::factor() {
@@ -173,7 +215,6 @@ void SyntaxAnalyzer::factor() {
 void SyntaxAnalyzer::term() {
 
 }
-
 void SyntaxAnalyzer::start() {
   program();
 }

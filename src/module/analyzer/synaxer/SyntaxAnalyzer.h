@@ -29,11 +29,11 @@ class SyntaxAnalyzer {
   /**  */
   void accept(TokenCode tokenCode);
   /** Пропускает до след. ключевогшо слова с кодом [tokenCode] */
-  void skipTo(TokenCode tokenCode);
+  void skipTo(const set<TokenCode> &block);
   /** Проверяет, пренадлежит ли текущее ключ. слово блоку [block] */
   bool isSymbolBelongTo(const set<TokenCode> &block);
   /**  Проверяет прнадлежность блоку [currentBlock] или пропускает до след. ключевого слова с кодом [block] */
-  void isBelongOrSkipTo(const set<enum TokenCode> &currentBlock, TokenCode block);
+  void isBelongOrSkipTo(const set<enum TokenCode> &currentBlock, int errorCode);
 
   /* Грамматики */
   /** Обрабтаывает структуру программы */
@@ -49,17 +49,22 @@ class SyntaxAnalyzer {
   /* Раздел описания типов */
   void typeBlock();
   void typeDescription();
-  void typeRecognition();
-  void referenceType();
 
   /* Раздел описания переменных */
   void varBlock();
   void varDescription();
-  void varRecognition();
+
+  /* Распознование типов */
+  void typeRecognition();
+  void referenceType();
+  void simpleType();
 
   /* */
   void term();
   void factor();
+  void skipTo(TokenCode code);
+  void operatorSection();
+  void scanTypeAndAccept();
 };
 
 #endif //COMPILER_SRC_MODULE_ANALYZER_SYNAXER_SYNTAXANALYZER_H_

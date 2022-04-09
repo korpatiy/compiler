@@ -4,7 +4,7 @@
 #include "../../codes/ErrorCodes.h"
 
 basic_string<char, char_traits<char>, allocator<char>> Error::showError() {
-  return "*** " + message + ", строка - " + to_string(textPosition->getLineNumber())
+  return message + ", строка - " + to_string(textPosition->getLineNumber())
       + ", позиция - " + to_string(textPosition->getPosNumber());
 }
 
