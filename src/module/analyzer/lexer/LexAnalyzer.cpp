@@ -72,7 +72,7 @@ shared_ptr<Token> LexAnalyzer::scanString() {
   if (charConst == '\'' || charConst == '\n') {
     /* Ошибка в символьной константе */
     ioModule->logError(75);
-    return nullptr;
+    return make_shared<ConstantToken>(charConst);
   }
 
   string str;
@@ -82,14 +82,14 @@ shared_ptr<Token> LexAnalyzer::scanString() {
     if (str.length() > MAX_STRING_SIZE) {
       /* Слишком длинная строковая константа */
       ioModule->logError(76);
-      return nullptr;
+      return make_shared<ConstantToken>(str);
     }
 
     charConst = ioModule->scanNextSymbol();
     if (charConst == '\n') {
       /* Ошибка в символьной константе */
       ioModule->logError(75);
-      return nullptr;
+      return make_shared<ConstantToken>(str);
     }
   }
 
@@ -113,11 +113,6 @@ shared_ptr<Token> LexAnalyzer::scanNumber() {
       break;
     }
     nextChar = ioModule->peekSymbol();
-    if (!isdigit(nextChar) && nextChar != ';' && nextChar != '\n') {
-      ioModule->logError(201);
-      nextChar = ioModule->peekSymbol(1);
-      currentChar = ioModule->scanNextSymbol();
-    }
   }
 
   /* Целая константа */
@@ -145,11 +140,6 @@ shared_ptr<Token> LexAnalyzer::scanNumber() {
       break;
     }
     nextChar = ioModule->peekSymbol();
-    if (!isdigit(nextChar) && nextChar != ';' && nextChar != '\n') {
-      ioModule->logError(201);
-      nextChar = ioModule->peekSymbol(1);
-      currentChar = ioModule->scanNextSymbol();
-    }
   }
 
   float realNumber = static_cast<float>(number) +

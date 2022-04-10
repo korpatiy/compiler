@@ -1,16 +1,17 @@
-program Hello;
+program HELLO;
 const
   year = 2000;
   pi = 3.141592;
 type
-  tInteger = integer;
-  tReal = ^real;
+  pInteger = ^integer;
+  pReal = ^real;
 var
   i, j, k : integer;
   d : real;
   s : string;
-  pInt : pInteger;
   flag : boolean;
+  pInt : pInteger;
 begin
-  writeln ('Hello World')
+  j := 1;
+  k := 2;
 end.
