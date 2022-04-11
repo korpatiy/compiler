@@ -123,4 +123,4 @@ program primer1;
 
 ### Диаграмма классов
 
-![diagram](diagrams/iomodule.drawio.png)
+![diagram](diagrams/iomodule.png)

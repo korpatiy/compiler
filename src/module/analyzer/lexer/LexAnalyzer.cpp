@@ -71,7 +71,7 @@ shared_ptr<Token> LexAnalyzer::scanString() {
   char charConst = ioModule->scanNextSymbol();
   if (charConst == '\'' || charConst == '\n') {
     /* Ошибка в символьной константе */
-    ioModule->logError(75);
+    ioModule->logError(75, 1);
     return make_shared<ConstantToken>(charConst);
   }
 
@@ -130,8 +130,8 @@ shared_ptr<Token> LexAnalyzer::scanNumber() {
     currentChar = ioModule->scanNextSymbol();
     int digit = currentChar - '0';
 
-    if (number < MAX_INT_SIZE / 10 ||
-        number < MAX_INT_SIZE / 10 && digit <= MAX_INT_SIZE % 10) {
+    if (realNumberPart < MAX_INT_SIZE / 10 ||
+        realNumberPart < MAX_INT_SIZE / 10 && digit <= MAX_INT_SIZE % 10) {
       realNumberPart = 10 * realNumberPart + digit;
       rad *= 10;
     } else {
