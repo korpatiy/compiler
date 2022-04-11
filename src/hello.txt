@@ -1,7 +1,7 @@
 program HELLO;
 const
-  year = 2000;
-  pi = 3.141592;
+  value = 555;
+  pi = 3.14;
 type
   pInteger = ^integer;
   pReal = ^real;

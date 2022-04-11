@@ -53,7 +53,7 @@ IOModule::IOModule(const string &_filePath) {
   posIdx = 0;
   currentLine = "";
   in.open(_filePath, ios::in);
-  out.open("C:/Users/Slava/Desktop/compiler/src/listing.txt");
+  out.open("/Users/korpatiy/Desktop/compiler/src/listing.txt");
   readNextLine();
 }
 
