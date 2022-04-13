@@ -22,6 +22,7 @@ string Token::toString() {
 IdentifierToken::IdentifierToken(string _identName) : Token(TokenType::TT_IDENTIFIER, TokenCode::ident) {
   this->identName = std::move(_identName);
 }
+
 string IdentifierToken::toString() {
   return identName;
 }
@@ -45,7 +46,7 @@ ConstantToken::ConstantToken(bool _value) : Token(TokenType::TT_CONSTANT, TokenC
 }
 
 shared_ptr<Variant> ConstantToken::getConstant() {
-  return move(constant);
+  return constant;
 }
 
 string ConstantToken::toString() {

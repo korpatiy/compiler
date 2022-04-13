@@ -3,7 +3,7 @@
 #include "models/io/headers/Error.h"
 #include "module/io/IOModule.h"
 #include "module/analyzer/lexer/LexAnalyzer.h"
-#include "module/analyzer/synaxer/SyntaxAnalyzer.h"
+#include "module/analyzer/syntaxer/SyntaxAnalyzer.h"
 
 int main() {
   //Windows

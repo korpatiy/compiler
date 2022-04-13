@@ -115,8 +115,19 @@ shared_ptr<Token> LexAnalyzer::scanNumber() {
     nextChar = ioModule->peekSymbol();
   }
 
+  if(number == 228){
+    printf("ds");
+  }
   /* Целая константа */
   if (nextChar != '.') {
+    return move(make_shared<ConstantToken>(number));
+  }
+
+  nextChar = ioModule->peekSymbol(1);
+  if (!isdigit(nextChar)) {
+    if (isalpha(nextChar)) {
+      ioModule->logError(201);
+    }
     return move(make_shared<ConstantToken>(number));
   }
 
@@ -213,7 +224,6 @@ shared_ptr<Token> LexAnalyzer::scanColon() {
 
 shared_ptr<Token> LexAnalyzer::scanPoint() {
   char nextChar = ioModule->peekSymbol();
-
   auto token = shared_ptr<Token>();
 
   if (nextChar == '.') {

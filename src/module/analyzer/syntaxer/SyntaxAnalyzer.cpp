@@ -8,8 +8,11 @@ SyntaxAnalyzer::SyntaxAnalyzer(const string &_filePath) {
 void SyntaxAnalyzer::accept(TokenCode tokenCode) {
   if (currentToken->getCode() == tokenCode)
     scanNextToken();
-  else
-    lexer->getIOModule()->logError(tokenCode, currentToken->toString().size());
+  else {
+    int offset = currentToken->toString().size();
+    if (currentToken->getCode() == endOfFile && tokenCode == point) offset = 0;
+    lexer->getIOModule()->logError(tokenCode, offset);
+  }
 }
 
 void SyntaxAnalyzer::scanNextToken() {
@@ -28,10 +31,10 @@ bool SyntaxAnalyzer::isSymbolBelongTo(const set<TokenCode> &block) {
   return block.count(currentToken->getCode()) == 1;
 }
 
-void SyntaxAnalyzer::isBelongOrSkipTo(const set<enum TokenCode> &currentBlock, int errorCode) {
-  if (!isSymbolBelongTo(currentBlock)) {
+void SyntaxAnalyzer::isBelongOrSkipTo(const set<enum TokenCode> &block, int errorCode) {
+  if (!isSymbolBelongTo(block)) {
     lexer->getIOModule()->logError(errorCode);
-    skipTo(currentBlock);
+    skipTo(block);
   }
 }
 
@@ -41,8 +44,8 @@ set<TokenCode> SyntaxAnalyzer::unionOf(const set<TokenCode> &first, const set<To
   return res;
 }
 
-set<TokenCode> SyntaxAnalyzer::unionOf(TokenCode code, const set<TokenCode> &second) {
-  set<TokenCode> res = second;
+set<TokenCode> SyntaxAnalyzer::unionOf(TokenCode code, const set<TokenCode> &block) {
+  set<TokenCode> res = block;
   res.insert(code);
   return res;
 }
@@ -54,6 +57,7 @@ void SyntaxAnalyzer::program() {
   accept(semicolon);
   descriptionSection();
   operatorSection();
+  auto kek = currentToken->toString();
   accept(point);
 }
 
@@ -152,6 +156,7 @@ void SyntaxAnalyzer::varBlock() {
 }
 
 void SyntaxAnalyzer::varDescription() {
+  isBelongOrSkipTo(unionOf(ident, finishCodeSet), 2);
   if (currentToken->getCode() == ident) {
     accept(ident);
     while (currentToken->getCode() == comma) {
@@ -185,12 +190,6 @@ void SyntaxAnalyzer::simpleType() {
 }
 
 void SyntaxAnalyzer::operatorSection() {
-  //todo begingSy
-  if (currentToken->getCode() != beginSy) {
-    lexer->getIOModule()->logError(22);
-    skipTo(finishCodeSet);
-  }
-
   auto point = set<TokenCode>{TokenCode::point};
   compoundOperator(point);
 }
@@ -222,6 +221,7 @@ void SyntaxAnalyzer::compoundOperator(const set<enum TokenCode> &followBlock) {
       operatorRecognition(unionOf(finishCodeSet, followBlock));
       accept(semicolon);
     }
+    auto kek = currentToken->toString();
     accept(endSy);
   }
 }
@@ -287,7 +287,6 @@ void SyntaxAnalyzer::caseOperator(const set<enum TokenCode> &followBlock) {
 void SyntaxAnalyzer::caseVariants(const set<enum TokenCode> &followBlock) {
   isBelongOrSkipTo(unionOf(expressionWithAdditiveCodeSet, followBlock), 22);
   if (isSymbolBelongTo(expressionWithAdditiveCodeSet)) {
-
     constRecognition(unionOf(colon, followBlock));
     /* Варианты через запятую */
     while (currentToken->getCode() == comma) {
@@ -311,7 +310,10 @@ void SyntaxAnalyzer::variable(const set<enum TokenCode> &followBlock) {
 
 void SyntaxAnalyzer::expression(const set<enum TokenCode> &followBlock) {
   auto exprSet = unionOf(leftPar, expressionWithAdditiveCodeSet);
-  isBelongOrSkipTo(unionOf(exprSet, followBlock), 23);
+  if (!isSymbolBelongTo(exprSet)) {
+    lexer->getIOModule()->logError(23, currentToken->toString().size());
+    skipTo(unionOf(exprSet, followBlock));
+  }
   if (isSymbolBelongTo(exprSet)) {
     simpleExpression(unionOf(comparisonOperatorCodeSet, followBlock));
 

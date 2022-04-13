@@ -8,7 +8,7 @@ enum TokenCode {
   /** Группа 2 */
   ifSy = 20,
   doSy = 21,
-  ofSy = 22,
+  ofSy = 26,
   orSy = 23,
   inSy = 24,
   toSy = 25,

@@ -26,16 +26,18 @@ class SyntaxAnalyzer {
  private:
   /** Сканирует следующий токен */
   void scanNextToken();
-  /**  */
+  /** Принимает переданный токен и сверяет с текущем */
   void accept(TokenCode tokenCode);
-  /** Пропускает до след. ключевогшо слова с кодом [tokenCode] */
+  /** Пропускает до первого встретившегося токена в [block] */
   void skipTo(const set<TokenCode> &block);
   /** Проверяет, пренадлежит ли текущее ключ. слово блоку [block] */
   bool isSymbolBelongTo(const set<TokenCode> &block);
-  /**  Проверяет прнадлежность блоку [currentBlock] или пропускает до след. ключевого слова с кодом [block] */
-  void isBelongOrSkipTo(const set<enum TokenCode> &currentBlock, int errorCode);
+  /**  Проверяет прнадлежность блоку [block] или пропускает до первого встречного, [errorCode] - код ошибки в разделах */
+  void isBelongOrSkipTo(const set<enum TokenCode> &block, int errorCode);
+  /** Объединяет блоки [first] и [second] */
   set<TokenCode> unionOf(const set<TokenCode> &first, const set<TokenCode> &second);
-  set<TokenCode> unionOf(TokenCode code, const set<TokenCode> &second);
+  /** Добавляет [code] в переданный блок [block] */
+  set<TokenCode> unionOf(TokenCode code, const set<TokenCode> &block);
 
   /* Грамматики */
   /** Обрабтаывает структуру программы */
@@ -71,6 +73,7 @@ class SyntaxAnalyzer {
   void whileOperator(const set<enum TokenCode> &followBlock);
   /* !Индивид. часть - оператор выбора case */
   void caseOperator(const set<enum TokenCode> &followBlock);
+  void caseVariants(const set<enum TokenCode> &followBlock);
 
   /* Разбор перменных и выражений */
   void variable(const set<enum TokenCode> &followBlock);
@@ -79,7 +82,6 @@ class SyntaxAnalyzer {
 
   void term(const set<enum TokenCode> &followBlock);
   void factor(const set<enum TokenCode> &followBlock);
-  void caseVariants(const set<enum TokenCode> &followBlock);
 };
 
 #endif //COMPILER_SRC_MODULE_ANALYZER_SYNAXER_SYNTAXANALYZER_H_

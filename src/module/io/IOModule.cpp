@@ -34,6 +34,7 @@ char IOModule::peekSymbol(int _offset) {
 
 void IOModule::closeScan() {
   in.close();
+  out << "\n-----Анализ закончен, кол-во ошибок: " << errors.size() << "------" << "\n";
   out.close();
 }
 
