@@ -151,13 +151,13 @@ class SyntaxAnalyzer {
 Структуру программы обрабаывает метод program():
 - Обработка заголовка;
 - Обработка раздела описания - descriptionSection();
-    - (Индивид часть) Блок констант - constBlock();
+    - __(!Индивид часть)__ Блок констант - constBlock();
         - Описание констант - constDescription();
             - Распознование констант - constRecognition();
     - Блок типов - typeBlock();
         - Описание типов - typeDescription();
             - Распознование типов - typeRecognition();
-                - (Индивид часть) Ссылочный тип - referenceType();
+                - __(!Индивид часть)__ Ссылочный тип - referenceType();
                 - Простой тип - simpleType();
     - Блок перменных - varBlock();
         - Описание перменных - varDescription();
@@ -177,7 +177,7 @@ class SyntaxAnalyzer {
         - Оператор цикла с предусловием - whileOperator();
             - -> expression();
             - -> operatorRecognition();
-        - (Индивид часть) Оператор выбора - caseOperator();
+        - __(!Индивид часть)__ Оператор выбора - caseOperator();
             - -> expression();
             - Варианты - caseVariants();
                 - -> constRecognition();

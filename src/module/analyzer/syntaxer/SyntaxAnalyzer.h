@@ -5,6 +5,7 @@
 #include "memory"
 #include "string"
 #include "../lexer/LexAnalyzer.h"
+#include "../../../models/analyzer/token/headers/Token.h"
 using namespace std;
 
 /**
