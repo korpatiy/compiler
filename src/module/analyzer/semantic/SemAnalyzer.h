@@ -3,7 +3,7 @@
 
 #include "memory"
 #include "string"
-#include "../../../models/analyzer/semantic/Scope.h"
+#include "../../../models/analyzer/semantic/headers/Scope.h"
 
 using namespace std;
 
@@ -12,14 +12,17 @@ using namespace std;
  */
 class SemAnalyzer {
  private:
-  shared_ptr<Scope> currentScope;
+  shared_ptr<Scope> scope;
 
  public:
   SemAnalyzer();
   ~SemAnalyzer() = default;
 
-  shared_ptr<Scope> openScope();
+  void openScope();
+  void initTypes();
 
+  shared_ptr<Scope> getLocalScope();
+  shared_ptr<Identifier> findIdentifier(const shared_ptr<Scope> &_findScope, const string &_identName);
 };
 
 #endif //COMPILER_SRC_MODULE_ANALYZER_SEMANTIC_SEMANALYZER_H_

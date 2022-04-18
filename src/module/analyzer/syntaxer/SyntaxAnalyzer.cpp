@@ -3,6 +3,7 @@
 
 SyntaxAnalyzer::SyntaxAnalyzer(const string &_filePath) {
   lexer = make_unique<LexAnalyzer>(_filePath);
+  semancer = make_unique<SemAnalyzer>();
 }
 
 void SyntaxAnalyzer::accept(TokenCode tokenCode) {
@@ -51,13 +52,16 @@ set<TokenCode> SyntaxAnalyzer::unionOf(TokenCode code, const set<TokenCode> &blo
 }
 
 void SyntaxAnalyzer::program() {
+  /* Открываем область */
+  semancer->openScope();
+  semancer->initTypes();
+
   scanNextToken();
   accept(programSy);
   accept(ident);
   accept(semicolon);
   descriptionSection();
   operatorSection();
-  auto kek = currentToken->toString();
   accept(point);
 }
 
@@ -100,35 +104,86 @@ void SyntaxAnalyzer::constBlock() {
 
 void SyntaxAnalyzer::constDescription() {
   if (currentToken->getCode() == ident) {
+    string identName = currentToken->toString();
     accept(ident);
     accept(TokenCode::equal);
-    constRecognition(baseTypeCodeSet);
+    auto constType = constRecognition(baseTypeCodeSet);
+
+    auto identifier = make_shared<Identifier>(identName, CONST_CLASS, constType);
+
+    if (semancer->getLocalScope()->lookupIdent(identName) != nullptr)
+      /* имя описано повторно */
+      lexer->getIOModule()->logError(101, currentToken->toString().size());
+    else
+      semancer->getLocalScope()->addIdentifier(identifier);
   }
 }
 
-void SyntaxAnalyzer::constRecognition(const set<enum TokenCode> &followBlock) {
+shared_ptr<Type> SyntaxAnalyzer::constRecognition(const set<enum TokenCode> &followBlock) {
+  shared_ptr<Type> constType = nullptr;
+
   auto constSet = unionOf(ident, baseTypeCodeSet);
   auto constWithAdd = unionOf(constSet, additiveCodeSet);
   isBelongOrSkipTo(unionOf(constWithAdd, followBlock), 18);
+
   if (isSymbolBelongTo(constWithAdd)) {
     switch (currentToken->getCode()) {
-      case intConst:accept(intConst);
+      case intConst:
+        constType = make_shared<IntType>();
+        accept(intConst);
         break;
-      case realConst:accept(realConst);
+      case realConst:
+        constType = make_shared<RealType>();
+        accept(realConst);
         break;
-      case stringConst:accept(stringConst);
+      case stringConst:
+        constType = make_shared<StringType>();
+        accept(stringConst);
         break;
-      case booleanConst:accept(booleanConst);
-      case ident: accept(ident);
+      case booleanConst:
+        constType = make_shared<BooleanType>();
+        accept(booleanConst);
         break;
+      case ident: {
+        constType = getIdentType();
+        accept(ident);
+        break;
+      }
       default:
         if (isSymbolBelongTo(additiveCodeSet)) {
           scanNextToken();
+          switch (currentToken->getCode()) {
+            case intConst:
+              constType = make_shared<IntType>();
+              break;
+            case realConst:
+              constType = make_shared<RealType>();
+              break;
+            case ident:
+              constType = getIdentType();
+              break;
+            default:
+              break;
+          }
           scanNextToken();
         }
         break;
     }
   }
+
+  return constType;
+}
+
+shared_ptr<Type> SyntaxAnalyzer::getIdentType() {
+  string identName = currentToken->toString();
+  auto identifier = semancer->findIdentifier(semancer->getLocalScope(), identName);
+  if (identifier == nullptr) {
+    /* имя не описано */
+    lexer->getIOModule()->logError(104);
+    identifier = make_shared<Identifier>(identName, CONST_CLASS, move(make_shared<Type>(UNKNOWN_TYPE)));
+    semancer->getLocalScope()->addIdentifier(identifier);
+  }
+  return identifier->getType();
 }
 
 void SyntaxAnalyzer::typeBlock() {
@@ -144,6 +199,7 @@ void SyntaxAnalyzer::typeDescription() {
     accept(ident);
     accept(TokenCode::equal);
     typeRecognition();
+
   }
 }
 
@@ -198,17 +254,23 @@ void SyntaxAnalyzer::operatorRecognition(const set<enum TokenCode> &followBlock)
   isBelongOrSkipTo(unionOf(operatorCodeSet, followBlock), 22);
   if (isSymbolBelongTo(operatorCodeSet)) {
     switch (currentToken->getCode()) {
-      case ident:assigmentOperator(followBlock);
+      case ident:
+        assigmentOperator(followBlock);
         break;
-      case beginSy:compoundOperator(followBlock);
+      case beginSy:
+        compoundOperator(followBlock);
         break;
-      case ifSy:ifOperator(followBlock);
+      case ifSy:
+        ifOperator(followBlock);
         break;
-      case whileSy:whileOperator(followBlock);
+      case whileSy:
+        whileOperator(followBlock);
         break;
-      case caseSy:caseOperator(followBlock);
+      case caseSy:
+        caseOperator(followBlock);
         break;
-      default: break;
+      default:
+        break;
     }
   }
 }
@@ -221,7 +283,6 @@ void SyntaxAnalyzer::compoundOperator(const set<enum TokenCode> &followBlock) {
       operatorRecognition(unionOf(finishCodeSet, followBlock));
       accept(semicolon);
     }
-    auto kek = currentToken->toString();
     accept(endSy);
   }
 }
@@ -362,24 +423,32 @@ void SyntaxAnalyzer::factor(const set<enum TokenCode> &followBlock) {
   isBelongOrSkipTo(unionOf(factorSet, followBlock), 22);
   if (isSymbolBelongTo(factorSet)) {
     switch (currentToken->getCode()) {
-      case leftPar:accept(leftPar);
+      case leftPar:
+        accept(leftPar);
         expression(unionOf(rightPar, followBlock));
         accept(rightPar);
         break;
-      case notSy: accept(notSy);
+      case notSy:
+        accept(notSy);
         factor(followBlock);
         break;
-      case intConst: accept(intConst);
+      case intConst:
+        accept(intConst);
         break;
-      case realConst: accept(realConst);
+      case realConst:
+        accept(realConst);
         break;
-      case stringConst: accept(stringConst);
+      case stringConst:
+        accept(stringConst);
         break;
-      case nilSy:accept(nilSy);
+      case nilSy:
+        accept(nilSy);
         break;
-      case ident:accept(ident);
+      case ident:
+        accept(ident);
         break;
-      default:break;
+      default:
+        break;
     }
   }
 }

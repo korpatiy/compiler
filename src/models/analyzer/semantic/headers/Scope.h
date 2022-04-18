@@ -15,12 +15,18 @@ using namespace std;
  */
 class Scope {
  private:
-  map<string, Identifier> identifiers;
-  vector<Type> types;
+  /* Таблица идентификаторов */
+  map<string, shared_ptr<Identifier>> identifiers;
+  /* Внешняя по уровню область видимости */
   shared_ptr<Scope> parentScope;
  public:
-  Scope();
+  explicit Scope(shared_ptr<Scope> _scope);
   ~Scope() = default;
+
+  void addIdentifier(const shared_ptr<Identifier> &_ident);
+  shared_ptr<Identifier> lookupIdent(const string& _identName);
+  shared_ptr<Scope> getParentScope();
+
 };
 
 #endif //COMPILER_SRC_MODELS_ANALYZER_SEMANTIC_SCOPE_H_
