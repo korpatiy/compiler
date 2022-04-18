@@ -9,45 +9,65 @@ shared_ptr<Token> LexAnalyzer::scanNextToken() {
   auto token = shared_ptr<Token>();
 
   switch (currentChar) {
-    case '\'': token = scanString();
+    case '\'':
+      token = scanString();
       break;
-    case '<': token = scanLater();
+    case '<':
+      token = scanLater();
       break;
-    case '>': token = scanGreater();
+    case '>':
+      token = scanGreater();
       break;
-    case ':': token = scanColon();
+    case ':':
+      token = scanColon();
       break;
-    case '.': token = scanPoint();
+    case '.':
+      token = scanPoint();
       break;
-    case '*': token = scanStar();
+    case '*':
+      token = scanStar();
       break;
-    case '(': token = scanLeftPar();
+    case '(':
+      token = scanLeftPar();
       break;
-    case '{': token = scanFlPar();
+    case '{':
+      token = scanFlPar();
       break;
-    case '}': token = scanFrPar();
+    case '}':
+      token = scanFrPar();
       break;
-    case '+': token = make_shared<KeywordToken>(TokenCode::plus);
+    case '+':
+      token = make_shared<KeywordToken>(TokenCode::plus);
       break;
-    case '-':token = make_shared<KeywordToken>(TokenCode::minus);
+    case '-':
+      token = make_shared<KeywordToken>(TokenCode::minus);
       break;
-    case '/': token = make_shared<KeywordToken>(TokenCode::slash);
+    case '/':
+      token = make_shared<KeywordToken>(TokenCode::slash);
       break;
-    case ')': token = make_shared<KeywordToken>(TokenCode::rightPar);
+    case ')':
+      token = make_shared<KeywordToken>(TokenCode::rightPar);
       break;
-    case ';': token = make_shared<KeywordToken>(TokenCode::semicolon);
+    case ';':
+      token = make_shared<KeywordToken>(TokenCode::semicolon);
       break;
-    case '=': token = make_shared<KeywordToken>(TokenCode::equal);
+    case '=':
+      token = make_shared<KeywordToken>(TokenCode::equal);
       break;
-    case ',': token = make_shared<KeywordToken>(TokenCode::comma);
+    case ',':
+      token = make_shared<KeywordToken>(TokenCode::comma);
       break;
-    case '^': token = make_shared<KeywordToken>(TokenCode::arrow);
+    case '^':
+      token = make_shared<KeywordToken>(TokenCode::arrow);
       break;
-    case '[': token = make_shared<KeywordToken>(TokenCode::lBracket);
+    case '[':
+      token = make_shared<KeywordToken>(TokenCode::lBracket);
       break;
-    case ']': token = make_shared<KeywordToken>(TokenCode::rBracket);
+    case ']':
+      token = make_shared<KeywordToken>(TokenCode::rBracket);
       break;
-    case '\0': token = make_shared<KeywordToken>(TokenCode::endOfFile);
+    case '\0':
+      token = make_shared<KeywordToken>(TokenCode::endOfFile);
       break;
     default:
       if (isdigit(currentChar))
@@ -115,7 +135,7 @@ shared_ptr<Token> LexAnalyzer::scanNumber() {
     nextChar = ioModule->peekSymbol();
   }
 
-  if(number == 228){
+  if (number == 228) {
     printf("ds");
   }
   /* Целая константа */
@@ -181,13 +201,16 @@ shared_ptr<Token> LexAnalyzer::scanLater() {
   auto token = shared_ptr<Token>();
 
   switch (nextChar) {
-    case '=':token = make_shared<KeywordToken>(TokenCode::laterEqual);
+    case '=':
+      token = make_shared<KeywordToken>(TokenCode::laterEqual);
       ioModule->scanNextSymbol();
       break;
-    case '>':token = make_shared<KeywordToken>(TokenCode::laterGreater);
+    case '>':
+      token = make_shared<KeywordToken>(TokenCode::laterGreater);
       ioModule->scanNextSymbol();
       break;
-    default:token = make_shared<KeywordToken>(TokenCode::later);
+    default:
+      token = make_shared<KeywordToken>(TokenCode::later);
       break;
   }
 

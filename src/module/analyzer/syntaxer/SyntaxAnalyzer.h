@@ -6,6 +6,7 @@
 #include "string"
 #include "../lexer/LexAnalyzer.h"
 #include "../../../models/analyzer/token/headers/Token.h"
+#include "../semantic/SemAnalyzer.h"
 using namespace std;
 
 /**
@@ -15,6 +16,8 @@ class SyntaxAnalyzer {
  private:
   /* Лексер */
   unique_ptr<LexAnalyzer> lexer;
+  /* Семансер */
+  unique_ptr<SemAnalyzer> semancer;
   /* Текущий токен */
   shared_ptr<Token> currentToken;
 
@@ -51,7 +54,7 @@ class SyntaxAnalyzer {
   /* !Индивид. часть - Раздел описания констант */
   void constBlock();
   void constDescription();
-  void constRecognition(const set<enum TokenCode> &followBlock);
+  shared_ptr<Type> constRecognition(const set<enum TokenCode> &followBlock);
 
   /* Раздел описания типов */
   void typeBlock();
@@ -83,6 +86,7 @@ class SyntaxAnalyzer {
 
   void term(const set<enum TokenCode> &followBlock);
   void factor(const set<enum TokenCode> &followBlock);
+  shared_ptr<Type> getIdentType();
 };
 
 #endif //COMPILER_SRC_MODULE_ANALYZER_SYNAXER_SYNTAXANALYZER_H_

@@ -1,0 +1,17 @@
+program HELLO1;
+const
+  value = 234;
+  pi = 3.14;
+type
+  pInteger = ^integer;
+  pString = string;
+  pReal = ^real;
+var
+  i, j, k : integer;
+  r : real;
+  s : string;
+  flag : boolean;
+  pInt : pInteger;
+begin
+  i := 1;
+end.

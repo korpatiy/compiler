@@ -1,14 +1,14 @@
 #include "../headers/Variant.h"
 
-Variant::Variant(ConstType _constType) : constType(_constType) {
-  this->constType = _constType;
+Variant::Variant(VariantType _variantType) : variantType(_variantType) {
+  this->variantType = _variantType;
 }
 
-ConstType Variant::getType() {
-  return constType;
+VariantType Variant::getType() {
+  return variantType;
 }
 
-IntVariant::IntVariant(int _value) : Variant(CT_INTEGER), value(_value) {
+IntVariant::IntVariant(int _value) : Variant(VT_INTEGER), value(_value) {
   this->value = _value;
 }
 
@@ -16,7 +16,7 @@ string IntVariant::toString() {
   return to_string(value);
 }
 
-RealVariant::RealVariant(float _value) : Variant(CT_REAL), value(_value) {
+RealVariant::RealVariant(float _value) : Variant(VT_REAL), value(_value) {
   this->value = _value;
 }
 
@@ -24,7 +24,7 @@ string RealVariant::toString() {
   return to_string(value);
 }
 
-StringVariant::StringVariant(const string &_value) : Variant(CT_STRING), value(_value) {
+StringVariant::StringVariant(const string &_value) : Variant(VT_STRING), value(_value) {
   this->value = _value;
 }
 
@@ -32,7 +32,7 @@ string StringVariant::toString() {
   return this->value;
 }
 
-BooleanVariant::BooleanVariant(bool _value) : Variant(CT_BOOLEAN), value(_value) {
+BooleanVariant::BooleanVariant(bool _value) : Variant(VT_BOOLEAN), value(_value) {
   this->value = _value;
 }
 

@@ -10,7 +10,6 @@ using namespace std;
  * Способ использования
  */
 enum EIdentClass {
-  PROG_CLASS = 300,
   TYPE_CLASS = 301,
   CONST_CLASS = 302,
   VAR_CLASS = 303,
@@ -25,7 +24,9 @@ class Identifier {
   EIdentClass identClass;
   shared_ptr<Type> type;
  public:
-  //Identifier(string& _idenName, );
+  Identifier(const string &_name, EIdentClass ident_class, shared_ptr<Type> _type);
+  basic_string<char> getName();
+  shared_ptr<Type> getType();
 };
 
 #endif //COMPILER_SRC_MODELS_ANALYZER_SEMANTIC_IDENTIFIER_H_

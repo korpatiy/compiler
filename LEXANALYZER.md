@@ -148,15 +148,15 @@ class ConstantToken : public Token {
 };
 ```
 
-#### Константы
+#### Константы (Типы констант)
 
-Для типов константы определим enum ConstType:
+Для типов (вариантов) константы определим enum VariantType:
 ```c++
-enum ConstType {
-  CT_INTEGER,
-  CT_REAL,
-  CT_STRING,
-  CT_BOOLEAN
+enum VariantType {
+  VT_INTEGER,
+  VT_REAL,
+  VT_STRING,
+  VT_BOOLEAN
 };
 ```
 
@@ -165,11 +165,11 @@ enum ConstType {
 ```c++
 class Variant {
  private:
-  ConstType constType;
+  VariantType variantType;
  public:
-  explicit Variant(ConstType _constType);
+  explicit Variant(VariantType _constType);
   virtual ~Variant() = default;
-  ConstType getType();
+  VariantType getType();
   virtual string toString() = 0;
 };
 ```
