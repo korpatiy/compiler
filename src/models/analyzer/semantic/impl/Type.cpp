@@ -1,10 +1,12 @@
 #include "../headers/Type.h"
 
+#include <utility>
+
 Type::Type(EType e_type) : type(UNKNOWN_TYPE) {
   type = e_type;
 }
 
-EType Type::getType() {
+EType Type::getTypeName() {
   return type;
 }
 
@@ -18,9 +20,11 @@ StringType::StringType() : ScalarType(STRING_TYPE) {}
 
 BooleanType::BooleanType() : ScalarType(BOOLEAN_TYPE) {}
 
-ReferenceType::ReferenceType() : Type(REFERENCE_TYPE) {}
+ReferenceType::ReferenceType(shared_ptr<ScalarType> _refType) : Type(REFERENCE_TYPE) {
+  refType = std::move(_refType);
+}
 
-EType ReferenceType::getRefType() {
-  return refType->getType();
+shared_ptr<ScalarType> ReferenceType::getRefType() {
+  return refType;
 }
 

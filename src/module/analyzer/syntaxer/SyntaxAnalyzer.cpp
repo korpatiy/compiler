@@ -3,7 +3,7 @@
 
 SyntaxAnalyzer::SyntaxAnalyzer(const string &_filePath) {
   lexer = make_unique<LexAnalyzer>(_filePath);
-  semancer = make_unique<SemAnalyzer>();
+  semancer = make_unique<SemAnalyzer>(lexer->getIOModule());
 }
 
 void SyntaxAnalyzer::accept(TokenCode tokenCode) {
@@ -111,11 +111,7 @@ void SyntaxAnalyzer::constDescription() {
 
     auto identifier = make_shared<Identifier>(identName, CONST_CLASS, constType);
 
-    if (semancer->getLocalScope()->lookupIdent(identName) != nullptr)
-      /* имя описано повторно */
-      lexer->getIOModule()->logError(101, currentToken->toString().size());
-    else
-      semancer->getLocalScope()->addIdentifier(identifier);
+    semancer->findDuplicateOrAddIdentifier(identName, identifier);
   }
 }
 
@@ -145,7 +141,7 @@ shared_ptr<Type> SyntaxAnalyzer::constRecognition(const set<enum TokenCode> &fol
         accept(booleanConst);
         break;
       case ident: {
-        constType = getIdentType();
+        constType = getIdent()->getType();
         accept(ident);
         break;
       }
@@ -160,7 +156,7 @@ shared_ptr<Type> SyntaxAnalyzer::constRecognition(const set<enum TokenCode> &fol
               constType = make_shared<RealType>();
               break;
             case ident:
-              constType = getIdentType();
+              constType = getIdent()->getType();
               break;
             default:
               break;
@@ -174,16 +170,16 @@ shared_ptr<Type> SyntaxAnalyzer::constRecognition(const set<enum TokenCode> &fol
   return constType;
 }
 
-shared_ptr<Type> SyntaxAnalyzer::getIdentType() {
+shared_ptr<Identifier> SyntaxAnalyzer::getIdent() {
   string identName = currentToken->toString();
   auto identifier = semancer->findIdentifier(semancer->getLocalScope(), identName);
   if (identifier == nullptr) {
     /* имя не описано */
-    lexer->getIOModule()->logError(104);
-    identifier = make_shared<Identifier>(identName, CONST_CLASS, move(make_shared<Type>(UNKNOWN_TYPE)));
+    lexer->getIOModule()->logError(14, identName.size());
+    identifier = make_shared<Identifier>(identName, VAR_CLASS, move(make_shared<Type>(UNKNOWN_TYPE)));
     semancer->getLocalScope()->addIdentifier(identifier);
   }
-  return identifier->getType();
+  return identifier;
 }
 
 void SyntaxAnalyzer::typeBlock() {
@@ -196,10 +192,12 @@ void SyntaxAnalyzer::typeBlock() {
 
 void SyntaxAnalyzer::typeDescription() {
   if (currentToken->getCode() == ident) {
+    string identName = currentToken->toString();
     accept(ident);
     accept(TokenCode::equal);
-    typeRecognition();
-
+    auto type = typeRecognition();
+    auto identifier = make_shared<Identifier>(identName, TYPE_CLASS, type);
+    semancer->findDuplicateOrAddIdentifier(identName, identifier);
   }
 }
 
@@ -214,35 +212,66 @@ void SyntaxAnalyzer::varBlock() {
 void SyntaxAnalyzer::varDescription() {
   isBelongOrSkipTo(unionOf(ident, finishCodeSet), 2);
   if (currentToken->getCode() == ident) {
+    vector<shared_ptr<Identifier>> variables;
+    string identName = currentToken->toString();
+    auto identifier = make_shared<Identifier>(identName, VAR_CLASS, nullptr);
+    variables.push_back(identifier);
+
     accept(ident);
     while (currentToken->getCode() == comma) {
       accept(comma);
+      identName = currentToken->toString();
+      identifier = make_shared<Identifier>(identName, VAR_CLASS, nullptr);
+      variables.push_back(identifier);
       accept(ident);
     }
     accept(colon);
-    typeRecognition();
+    auto kek = currentToken->toString();
+    auto varType = typeRecognition();
+
+    for (const auto &ident: variables) {
+      ident->setType(varType);
+      semancer->findDuplicateOrAddIdentifier(ident->getName(), ident);
+    }
   }
 }
 
-void SyntaxAnalyzer::typeRecognition() {
+shared_ptr<Type> SyntaxAnalyzer::typeRecognition() {
   auto set = baseTypeCodeSet;
   set.insert(arrow);
   set.insert(ident);
   isBelongOrSkipTo(set, 10);
-
-  if (currentToken->getCode() == arrow) {
-    referenceType();
-  } else
-    simpleType();
+  shared_ptr<Type> type = nullptr;
+  if (isSymbolBelongTo(set)) {
+    if (currentToken->getCode() == arrow) {
+      type = referenceType();
+    } else
+      type = simpleType();
+  }
+  return type;
 }
 
-void SyntaxAnalyzer::referenceType() {
+shared_ptr<Type> SyntaxAnalyzer::referenceType() {
+  shared_ptr<Type> type = nullptr;
   accept(arrow);
+  string identName = currentToken->toString();
+  type = semancer->findType(semancer->getLocalScope(), identName);
+  if (type == nullptr)
+    getIdent();
   accept(ident);
+  return type;
 }
 
-void SyntaxAnalyzer::simpleType() {
-  accept(ident);
+shared_ptr<Type> SyntaxAnalyzer::simpleType() {
+  shared_ptr<Type> type = nullptr;
+  if (currentToken->getCode() == ident) {
+    string identName = currentToken->toString();
+    type = semancer->findType(semancer->getLocalScope(), identName);
+    if (type == nullptr)
+      getIdent();
+    accept(ident);
+  }
+  return type;
 }
 
 void SyntaxAnalyzer::operatorSection() {
@@ -290,9 +319,13 @@ void SyntaxAnalyzer::compoundOperator(const set<enum TokenCode> &followBlock) {
 void SyntaxAnalyzer::assigmentOperator(const set<enum TokenCode> &followBlock) {
   isBelongOrSkipTo(unionOf(ident, followBlock), 22);
   if (currentToken->getCode() == ident) {
-    variable(unionOf(assign, followBlock));
+    string identName = currentToken->toString();
+    auto varType = variable(unionOf(assign, followBlock));
+
     accept(assign);
-    expression(followBlock);
+
+    auto exprType = expression(followBlock);
+    semancer->analyzeAssigment(varType->getTypeName(), exprType->getTypeName());
   }
 }
 
@@ -301,7 +334,10 @@ void SyntaxAnalyzer::ifOperator(const set<enum TokenCode> &followBlock) {
   if (currentToken->getCode() == ifSy) {
     accept(ifSy);
     auto thenSet = unionOf(thenSy, followBlock);
-    expression(thenSet);
+    auto type = expression(thenSet);
+    if (type == nullptr)
+      lexer->getIOModule()->logError(401);
+
     accept(thenSy);
     auto elseSet = unionOf(elseSy, followBlock);
     operatorRecognition(elseSet);
@@ -316,7 +352,9 @@ void SyntaxAnalyzer::whileOperator(const set<enum TokenCode> &followBlock) {
   isBelongOrSkipTo(unionOf(whileSy, followBlock), 22);
   if (currentToken->getCode() == whileSy) {
     accept(whileSy);
-    expression(unionOf(doSy, followBlock));
+    auto type = expression(unionOf(doSy, followBlock));
+    if (type == nullptr)
+      lexer->getIOModule()->logError(401);
     accept(doSy);
     operatorRecognition(followBlock);
   }
@@ -328,27 +366,31 @@ void SyntaxAnalyzer::caseOperator(const set<enum TokenCode> &followBlock) {
     accept(caseSy);
 
     /* case of */
-    expression(unionOf(ofSy, followBlock));
+    auto type = expression(unionOf(ofSy, followBlock));
+    if (type == nullptr)
+      lexer->getIOModule()->logError(401);
     accept(ofSy);
 
     /* case end */
     auto endCaseSet = unionOf(endSy, followBlock);
-    caseVariants(endCaseSet);
+    caseVariants(endCaseSet, type->getTypeName());
 
     /* Перебиарем варианты */
     while (currentToken->getCode() == semicolon) {
       accept(semicolon);
-      caseVariants(endCaseSet);
+      caseVariants(endCaseSet, BOOLEAN_TYPE);
     }
 
     accept(endSy);
   }
 }
 
-void SyntaxAnalyzer::caseVariants(const set<enum TokenCode> &followBlock) {
+void SyntaxAnalyzer::caseVariants(const set<enum TokenCode> &followBlock, EType followType) {
   isBelongOrSkipTo(unionOf(expressionWithAdditiveCodeSet, followBlock), 22);
   if (isSymbolBelongTo(expressionWithAdditiveCodeSet)) {
-    constRecognition(unionOf(colon, followBlock));
+    auto type = constRecognition(unionOf(colon, followBlock));
+    if (type == nullptr || type->getTypeName() != followType)
+      lexer->getIOModule()->logError(401);
     /* Варианты через запятую */
     while (currentToken->getCode() == comma) {
       accept(comma);
@@ -360,97 +402,159 @@ void SyntaxAnalyzer::caseVariants(const set<enum TokenCode> &followBlock) {
   }
 }
 
-void SyntaxAnalyzer::variable(const set<enum TokenCode> &followBlock) {
+shared_ptr<Type> SyntaxAnalyzer::variable(const set<enum TokenCode> &followBlock) {
+  shared_ptr<Type> type = nullptr;
   isBelongOrSkipTo(unionOf(ident, followBlock), 22);
   if (currentToken->getCode() == ident) {
+    auto identifier = getIdent();
+    if (identifier->getIdentClass() == CONST_CLASS)
+      lexer->getIOModule()->logError(400);
+    type = identifier->getType();
     accept(ident);
+
+    //todo ref
     if (currentToken->getCode() == arrow)
       accept(arrow);
   }
+  return type;
 }
 
-void SyntaxAnalyzer::expression(const set<enum TokenCode> &followBlock) {
+shared_ptr<Type> SyntaxAnalyzer::expression(const set<enum TokenCode> &followBlock) {
+  shared_ptr<Type> type = nullptr;
   auto exprSet = unionOf(leftPar, expressionWithAdditiveCodeSet);
   if (!isSymbolBelongTo(exprSet)) {
     lexer->getIOModule()->logError(23, currentToken->toString().size());
     skipTo(unionOf(exprSet, followBlock));
   }
   if (isSymbolBelongTo(exprSet)) {
-    simpleExpression(unionOf(comparisonOperatorCodeSet, followBlock));
+    type = simpleExpression(unionOf(comparisonOperatorCodeSet, followBlock));
 
+    /* Провяерем соответствие типов операторов */
     if (isSymbolBelongTo(comparisonOperatorCodeSet)) {
       scanNextToken();
-      simpleExpression(followBlock);
+      auto secondType = simpleExpression(followBlock);
+      type = semancer->analyzeRelations(type->getTypeName(), secondType->getTypeName());
+      if (type == nullptr)
+        /* несоответствие типов для операции отношения */
+        lexer->getIOModule()->logError(186);
     }
   }
+  return type;
 }
 
-void SyntaxAnalyzer::simpleExpression(const set<enum TokenCode> &followBlock) {
+shared_ptr<Type> SyntaxAnalyzer::simpleExpression(const set<enum TokenCode> &followBlock) {
+  shared_ptr<Type> type = nullptr;
   auto exprSet = unionOf(leftPar, expressionWithAdditiveCodeSet);
   isBelongOrSkipTo(unionOf(exprSet, followBlock), 22);
   if (isSymbolBelongTo(exprSet)) {
+    bool isTermWithSign = false;
+
     /* Смотрим операции "+" и "-" */
-    if (isSymbolBelongTo(additiveCodeSet))
+    if (isSymbolBelongTo(additiveCodeSet)) {
       scanNextToken();
+      isTermWithSign = true;
+    }
 
     /* Добавляем оператор "or" */
     auto simpleExprWithOr = unionOf(orSy, additiveCodeSet);
-    term(simpleExprWithOr);
+    type = term(simpleExprWithOr);
 
+    if (isTermWithSign)
+      semancer->checkRightTerm(type);
+
+    /* Провеярем аддитивные операции */
     while (isSymbolBelongTo(simpleExprWithOr)) {
+      auto operation = currentToken->getCode();
       scanNextToken();
-      term(simpleExprWithOr);
+      auto secondType = term(simpleExprWithOr);
+      type = semancer->analyzeAdditive(type->getTypeName(),
+                                       secondType->getTypeName(),
+                                       operation,
+                                       static_cast<int>(currentToken->toString().size()));
     }
   }
+  return type;
 }
 
-void SyntaxAnalyzer::term(const set<enum TokenCode> &followBlock) {
+shared_ptr<Type> SyntaxAnalyzer::term(const set<enum TokenCode> &followBlock) {
+  shared_ptr<Type> type = nullptr;
   auto termSet = unionOf(leftPar, expressionCodeSet);
   isBelongOrSkipTo(unionOf(termSet, followBlock), 22);
   if (isSymbolBelongTo(termSet)) {
     auto multiplicativeFollow = unionOf(multiplicativeCodeSet, followBlock);
-    factor(multiplicativeFollow);
+    type = factor(multiplicativeFollow);
 
+    /* Провеярем мультпликативные операции */
     while (isSymbolBelongTo(multiplicativeCodeSet)) {
+      auto operation = currentToken->getCode();
       scanNextToken();
-      factor(multiplicativeFollow);
+      auto secondType = factor(multiplicativeFollow);
+      type = semancer->analyzeMultiplicative(type->getTypeName(),
+                                             secondType->getTypeName(),
+                                             operation,
+                                             static_cast<int>(currentToken->toString().size()));
     }
   }
+  return type;
 }
 
-void SyntaxAnalyzer::factor(const set<enum TokenCode> &followBlock) {
+shared_ptr<Type> SyntaxAnalyzer::factor(const set<enum TokenCode> &followBlock) {
+  shared_ptr<Type> type = nullptr;
   auto factorSet = unionOf(leftPar, expressionCodeSet);
   isBelongOrSkipTo(unionOf(factorSet, followBlock), 22);
   if (isSymbolBelongTo(factorSet)) {
     switch (currentToken->getCode()) {
       case leftPar:
         accept(leftPar);
-        expression(unionOf(rightPar, followBlock));
+        type = expression(unionOf(rightPar, followBlock));
         accept(rightPar);
         break;
       case notSy:
         accept(notSy);
-        factor(followBlock);
+        type = factor(followBlock);
+        if (type->getTypeName() != BOOLEAN_TYPE)
+          /* операнды AND, NOT, OR должны быть булевыми */
+          lexer->getIOModule()->logError(210);
         break;
       case intConst:
+        type = make_shared<IntType>();
         accept(intConst);
         break;
       case realConst:
+        type = make_shared<RealType>();
         accept(realConst);
         break;
       case stringConst:
+        type = make_shared<StringType>();
         accept(stringConst);
         break;
-      case nilSy:
-        accept(nilSy);
+      case ident: {
+        string identName = currentToken->toString();
+        auto identifier = semancer->findIdentifier(semancer->getLocalScope(), identName);
+        if (identifier != nullptr) {
+          switch (identifier->getIdentClass()) {
+            case VAR_CLASS:
+              type = variable(followBlock);
+              break;
+            case CONST_CLASS:
+              type = identifier->getType();
+              accept(ident);
+            default:
+              break;
+          }
+        } else {
+          identifier = make_shared<Identifier>(identName, VAR_CLASS, make_unique<Type>(UNKNOWN_TYPE));
+          semancer->findDuplicateOrAddIdentifier(identName, identifier);
+          lexer->getIOModule()->logError(14);
+          accept(ident);
+        }
         break;
-      case ident:
-        accept(ident);
-        break;
+      }
       default:
         break;
     }
   }
+  return type;
 }
 
 void SyntaxAnalyzer::start() {

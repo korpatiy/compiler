@@ -94,7 +94,7 @@ class Token {
   /** Возвращет строковое значение токена */
   virtual string toString();
   /** Возвращает тип токена */
-  TokenType getType();
+  TokenType getTypeName();
   /** Возвращает код токена */
   TokenCode getCode();
 };
@@ -169,7 +169,7 @@ class Variant {
  public:
   explicit Variant(VariantType _constType);
   virtual ~Variant() = default;
-  VariantType getType();
+  VariantType getTypeName();
   virtual string toString() = 0;
 };
 ```

@@ -16,11 +16,15 @@
   могут использоваться только в соответствии с описанием
   внутри этой области.
   
+Опишем контекстные условия, которым необходимо придерживаться:
+1. В любой области действия без внутренних по отношению к ней областей действия никакой идентификатор не может быть описан более одного раза.
+2. Каждому прикладному вхождению нестандартного идентификатора (стандартные идентификаторы — integer, boolean,
+   real, char, true, false и др.) должно найтись соответствующее ему определяющее вхождение. Алгоритм разберем с опианием метода.
+3. Контекстные условия предполагают также проверку
+   соответствия типов величин, входящих в синтаксические
+   конструкции программ.   
 
-
-```c++
-
-```
+##### Организация сущностей
 
 Проверка контекстных условий требует знания атрибутов
 идентификаторов, используемых в программе. Анализатор получает эту информацию из описаний
@@ -37,33 +41,240 @@ enum EIdentClass {
 };
 ```
 
-Для хранение атрбутов идентификтаора создадим класс:
+Для хранение атрбутов идентификтаора создадим класс Identifier 
+с атрибутами **имя идентификатора**, **способ использования** и его **тип**:
 ```c++
 /**
  * Идентификатор
  */
 class Identifier {
  private:
+  /* Имя идентификатора */
   string identName;
+  /* Способ использования */
   EIdentClass identClass;
+  /* Тип */
   shared_ptr<Type> type;
  public:
   Identifier(const string &_name, EIdentClass ident_class, shared_ptr<Type> _type);
+  ~Identifier() = default;
+  /** Возращает имя идентификатора */
   basic_string<char> getName();
+  /** Возращает тип идентификатора */
   shared_ptr<Type> getType();
+  /** Устанавливает тип идентификатора */
+  void setType(shared_ptr<Type> _type);
+  /** Возвращает способ использования */
+  EIdentClass getIdentClass();
 };
 ```
 
-```c++
+Как было сказанно в контекстных условиях - идентификтар живет в области.
+для этого определим класс Scope, содержащий информацию о **идентификаторах области**, ссылку на объемлющую область.
 
+Определим доп. методы для добаление, поиска идентификатора и возврата родительской области.
+
+```c++
+/**
+ * Область видимости
+ */
+class Scope {
+ private:
+  /* Таблица идентификаторов */
+  map<string, shared_ptr<Identifier>> identifiers;
+  /* Внешняя по уровню область видимости */
+  shared_ptr<Scope> parentScope;
+ public:
+  explicit Scope(shared_ptr<Scope> _scope);
+  ~Scope() = default;
+
+  /** Добавляет переданный идентификтаор [_ident] в таблицу */
+  void addIdentifier(const shared_ptr<Identifier> &_ident);
+  /** Возвращает идентификатор по имени */
+  shared_ptr<Identifier> lookupIdent(const string &_identName);
+  /** Возвращет объемлющую область */
+  shared_ptr<Scope> getParentScope();
+};
+```
+  
+Для работы с типами определим базовы класс Type:
+```c++
+/**
+ * Абстрактный тип
+ */
+class Type {
+ private:
+  EType type = UNKNOWN_TYPE;
+ public:
+  explicit Type(EType e_type);
+  ~Type() = default;
+  /** Возвращает тип */
+  EType getTypeName();
+};
 ```
 
+В рамках работы будем работать с базовыми типами - int, real, string, boolean.
+Для индивид. части определим ссылочный тип переменной - reference и для нейтрализации и обработки ошибок - неизвестный тип.
 ```c++
-
+/**
+ * Типы
+ */
+enum EType {
+  UNKNOWN_TYPE,
+  INT_TYPE,
+  REAL_TYPE,
+  STRING_TYPE,
+  BOOLEAN_TYPE,
+  REFERENCE_TYPE
+};
 ```
+
+Для отеделения базовых скалярных типов опеределим **ScalarType** и его 4 подкаласа - типа:
+```c++
+/**
+ * Скалярный стандартный тип
+ */
+class ScalarType : public Type {
+ public:
+  explicit ScalarType(EType e_type);
+  ~ScalarType() = default;
+};
+```
+
+Ссылочный тип наследуюется от базового и содержит ссылкую на скалярный тип (т.к по индивид. части работаем только с базовыми + ссылочным, то сразу будем ссылаться на  скалярный).
+```c++
+/**
+ * Ссылочный тип
+ */
+class ReferenceType : public Type {
+ private:
+  /* Ссылка на базовый тип */
+  shared_ptr<ScalarType> refType;
+ public:
+  ReferenceType(shared_ptr<ScalarType> _refType);
+  ~ReferenceType() = default;
+  /** Возвращает ссылку на базовый тип */
+  shared_ptr<ScalarType> getRefType();
+};
+```
+
+Определим модуль семантичского анализатора.
+Он содержит область видимости, в которой находится в данный момент и ссылку на модуль ввода-вывода для логирования ошибок.
+
+```c++
+/**
+ * Модуль семантического анализтора
+ */
+class SemAnalyzer {
+ private:
+  /* Модуль ввода-вывода */
+  shared_ptr<IOModule> ioModule;
+  /* Область видимости */
+  shared_ptr<Scope> scope;
+
+ public:
+  explicit SemAnalyzer(shared_ptr<IOModule> _ioModule);
+  ~SemAnalyzer() = default;
+
+  /** Открывает область видимости */
+  void openScope();
+  /** Инициализарует базовые типы */
+  void initTypes();
+
+  /** Возвращает текующую область видимости */
+  shared_ptr<Scope> getLocalScope();
+  /** Ищет идентификатор с именем [_identName] в переданной области [_findScope] */
+  shared_ptr<Identifier> findIdentifier(const shared_ptr<Scope> &_findScope, const string &_identName);
+  /** Ищет тип по имени идентификатора [_identName] в переданной области [_findScope] */
+  shared_ptr<Type> findType(const shared_ptr<Scope> &_findScope, const string &_identName);
+  /** Ищет дубиликаты идентфиктаора с имененм [_identName] или добавляет новый в текущую область */
+  void findDuplicateOrAddIdentifier(const string &_identName, const shared_ptr<Identifier> &_identifier);
+
+  /* Методы анализа */
+
+  /** Анализ оператора присвания */
+  void analyzeAssigment(EType _varType, EType _exprType);
+
+  /** Анализ для операции отношения 
+   * @param _type1 - левый тип
+   * @param _type2 - правый тип
+   * */
+  shared_ptr<Type> analyzeRelations(EType _type1, EType _type2);
+
+  /** Анализ для операции добавления
+   * @param _type1 - левый тип
+   * @param _type2 - правый тип
+   * @param _operation - операция между
+   */
+  shared_ptr<Type> analyzeAdditive(EType _type1,
+                                   EType _type2,
+                                   TokenCode _operation,
+                                   int _tokenSize);
+
+  /** Анализ для операций мультипликации 
+   * @param _type1 - левый тип
+   * @param _type2 - правый тип
+   * @param _operation - операция между
+   */
+  shared_ptr<Type> analyzeMultiplicative(EType _type1,
+                                         EType _type2,
+                                         TokenCode _operation,
+                                         int _tokenSize);
+
+  /** Анализ для операций численных типов */
+  shared_ptr<Type> analyzeNumericTypes(EType _type1, EType _type2);
+
+  /** Проверяет правый терм в выражении или выдает ошибку */
+  void checkRightTerm(const shared_ptr<struct Type> &_type);
+};
+```
+
+Опишем методы для работы анализатора. 
+Логика работы семансера и обработка ошибок, относященся только семансеру преимущественна вынесена в его методы.
+На уровне синтаксера остается частичная работа с идентификаторами и типами.
+Таким образом логика семансера и синтаксера разделена и пересекается минимально.
+
+Работа семансера начинается с инициализации глобальной области видимости, базовых типов и констант (для булеана - true false)
+```c++
+  /** Открывает область видимости */
+  void openScope();
+  /** Инициализарует базовые типы */
+  void initTypes();
+```
+
+Далее определим метод, реализующий алгоритм идентификации по контекстному условию 2:
+```c++
+  /** Ищет идентификатор с именем [_identName] в переданной области [_findScope] */
+  shared_ptr<Identifier> findIdentifier(const shared_ptr<Scope> &_findScope, const string &_identName);
+```
+
+1) Смотрим самую внутреннюю область действия,
+ содержащую данное прикладное вхождение;
+2) Ищем определяющее вхождение (идентификатор). Если найдено, то идентификация закончена.
+Вхождение идентификатора удовлетворяет контекстному условию
+Иначе рекурсивно поднимаемся по области видимости (шаг 3).
+3) Найти область действия, непосредственно объемлющую только
+   что рассмотренную. Если такая есть, то переходим к шагу 2.Иначе, если иднетификатора не найдено, то
+   вхождение идентификатора не удовлетворяет контекстному условию.
+   
+К этому определяем дополнительные методы для получения текущей области, определение типа и проверки дубликата идентификатора.
+
+Далее следует раздели проверки контекста выражений и операций:
+ - **analyzeAssigment** - для проверки оператора присваивания на соответвсвие типов
+ - **analyzeRelations** - проверка операции отношения (>, <, =...)
+ - **analyzeAdditive** - проверка аддитивных операций (-, +) и доп. оператора orSy (т.к обработка находится в блоке simpleExpression)
+ - **analyzeMultiplicative** - проверка мультпилкативных операций (*, /, div, mod...)
+Доп методы для быстрой проверки правого терма в выражении и сравнения численных типов. 
+ 
 
 ### Диаграммы классов
 
+##### Типы:
+![diagram](diagrams/type.png)
+##### Идентификатор - область видимости:
+![diagram](diagrams/scope-ident.png)
+##### Анализатор:
+![diagram](diagrams/semancer.png)
 
 
 ### Тестирование

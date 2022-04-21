@@ -23,10 +23,12 @@ class Scope {
   explicit Scope(shared_ptr<Scope> _scope);
   ~Scope() = default;
 
+  /** Добавляет переданный идентификтаор [_ident] в таблицу */
   void addIdentifier(const shared_ptr<Identifier> &_ident);
-  shared_ptr<Identifier> lookupIdent(const string& _identName);
+  /** Возвращает идентификатор по имени */
+  shared_ptr<Identifier> lookupIdent(const string &_identName);
+  /** Возвращет объемлющую область */
   shared_ptr<Scope> getParentScope();
-
 };
 
 #endif //COMPILER_SRC_MODELS_ANALYZER_SEMANTIC_SCOPE_H_

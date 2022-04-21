@@ -20,13 +20,23 @@ enum EIdentClass {
  */
 class Identifier {
  private:
+  /* Имя идентификатора */
   string identName;
+  /* Способ использования */
   EIdentClass identClass;
+  /* Тип */
   shared_ptr<Type> type;
  public:
   Identifier(const string &_name, EIdentClass ident_class, shared_ptr<Type> _type);
+  ~Identifier() = default;
+  /** Возращает имя идентификатора */
   basic_string<char> getName();
+  /** Возращает тип идентификатора */
   shared_ptr<Type> getType();
+  /** Устанавливает тип идентификатора */
+  void setType(shared_ptr<Type> _type);
+  /** Возвращает способ использования */
+  EIdentClass getIdentClass();
 };
 
 #endif //COMPILER_SRC_MODELS_ANALYZER_SEMANTIC_IDENTIFIER_H_

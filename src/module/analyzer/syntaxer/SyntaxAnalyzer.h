@@ -65,9 +65,9 @@ class SyntaxAnalyzer {
   void varDescription();
 
   /* Распознование типов */
-  void typeRecognition();
-  void referenceType();
-  void simpleType();
+  shared_ptr<Type> typeRecognition();
+  shared_ptr<Type> referenceType();
+  shared_ptr<Type> simpleType();
 
   /* Распознование операторов */
   void operatorRecognition(const set<enum TokenCode> &followBlock);
@@ -77,16 +77,16 @@ class SyntaxAnalyzer {
   void whileOperator(const set<enum TokenCode> &followBlock);
   /* !Индивид. часть - оператор выбора case */
   void caseOperator(const set<enum TokenCode> &followBlock);
-  void caseVariants(const set<enum TokenCode> &followBlock);
+  void caseVariants(const set<enum TokenCode> &followBlock, EType followType);
 
   /* Разбор перменных и выражений */
-  void variable(const set<enum TokenCode> &followBlock);
-  void expression(const set<enum TokenCode> &followBlock);
-  void simpleExpression(const set<enum TokenCode> &followBlock);
+  shared_ptr<Type> variable(const set<enum TokenCode> &followBlock);
+  shared_ptr<Type> expression(const set<enum TokenCode> &followBlock);
+  shared_ptr<Type> simpleExpression(const set<enum TokenCode> &followBlock);
 
-  void term(const set<enum TokenCode> &followBlock);
-  void factor(const set<enum TokenCode> &followBlock);
-  shared_ptr<Type> getIdentType();
+  shared_ptr<Type> term(const set<enum TokenCode> &followBlock);
+  shared_ptr<Type> factor(const set<enum TokenCode> &followBlock);
+  shared_ptr<Identifier> getIdent();
 };
 
 #endif //COMPILER_SRC_MODULE_ANALYZER_SYNAXER_SYNTAXANALYZER_H_

@@ -1,12 +1,10 @@
 program HELLO1;
 const
   value = 234;
-  value = 3.14;
-              ^
-*** (Код - 101) имя описано повторно, строка - 4, позиция - 14
+  pi = 3.14;
 type
-  pInteger = ^integer;
   pString = string;
+  pInteger = ^integer;
   pReal = ^real;
 var
   i, j, k : integer;
@@ -16,8 +14,7 @@ var
   pInt : pInteger;
 begin
   i := 1;
-end
-   ^
-*** (Код - 106) должен идти символ  '.', строка - 17, позиция - 3
+  r := pi;
+end.
 
------Анализ закончен, кол-во ошибок: 2------
+-----Анализ закончен, кол-во ошибок: 0------

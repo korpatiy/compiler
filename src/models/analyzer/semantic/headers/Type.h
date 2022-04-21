@@ -7,6 +7,9 @@
 
 using namespace std;
 
+/**
+ * Типы
+ */
 enum EType {
   UNKNOWN_TYPE,
   INT_TYPE,
@@ -25,7 +28,8 @@ class Type {
  public:
   explicit Type(EType e_type);
   ~Type() = default;
-  EType getType();
+  /** Возвращает тип */
+  EType getTypeName();
 };
 
 /**
@@ -67,11 +71,12 @@ class BooleanType : public ScalarType {
 class ReferenceType : public Type {
  private:
   /* Ссылка на базовый тип */
-  unique_ptr<ScalarType> refType;
+  shared_ptr<ScalarType> refType;
  public:
-  ReferenceType();
+  ReferenceType(shared_ptr<ScalarType> _refType);
   ~ReferenceType() = default;
-  EType getRefType();
+  /** Возвращает ссылку на базовый тип */
+  shared_ptr<ScalarType> getRefType();
 };
 
 #endif //COMPILER_SRC_MODELS_ANALYZER_SEMANTIC_TYPE_H_
