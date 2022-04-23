@@ -1,0 +1,35 @@
+program HELLO1;
+const
+  value = 432;
+  pi = 3.14;
+type
+  pInteger = ^integer;
+  pString = ^strng;
+var
+  i, j, k : integer;
+  r : real;
+  s : string;
+  flag : boolean;
+  pInt : pInteger;
+  realInt : integer;
+begin
+  d := 5;
+  pi := 3.15;
+
+  i := '432';
+  s := nos;
+
+  k := 5;
+  while (k > '234') do begin
+     k := k + 2;
+  end;
+  r := pi;
+  if (r >= '3.15') then begin
+  end;
+
+  flag := flag and '321';
+  flag := 45 > 44;
+
+  j := j * true;
+  j := j * 32;
+end.
