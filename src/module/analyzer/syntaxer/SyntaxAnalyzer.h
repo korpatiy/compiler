@@ -20,6 +20,8 @@ class SyntaxAnalyzer {
   unique_ptr<SemAnalyzer> semancer;
   /* Текущий токен */
   shared_ptr<Token> currentToken;
+  /* Модуль ввода-вывода */
+  shared_ptr<IOModule> ioModule;
 
  public:
   explicit SyntaxAnalyzer(const string &_filePath);

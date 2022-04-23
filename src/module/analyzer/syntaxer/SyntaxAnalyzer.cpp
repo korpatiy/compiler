@@ -4,6 +4,7 @@
 SyntaxAnalyzer::SyntaxAnalyzer(const string &_filePath) {
   lexer = make_unique<LexAnalyzer>(_filePath);
   semancer = make_unique<SemAnalyzer>(lexer->getIOModule());
+  ioModule = lexer->getIOModule();
 }
 
 void SyntaxAnalyzer::accept(TokenCode tokenCode) {
@@ -12,7 +13,7 @@ void SyntaxAnalyzer::accept(TokenCode tokenCode) {
   else {
     int offset = currentToken->toString().size();
     if (currentToken->getCode() == endOfFile && tokenCode == point) offset = 0;
-    lexer->getIOModule()->logError(tokenCode, offset);
+    ioModule->logError(tokenCode, offset);
   }
 }
 
@@ -34,7 +35,7 @@ bool SyntaxAnalyzer::isSymbolBelongTo(const set<TokenCode> &block) {
 
 void SyntaxAnalyzer::isBelongOrSkipTo(const set<enum TokenCode> &block, int errorCode) {
   if (!isSymbolBelongTo(block)) {
-    lexer->getIOModule()->logError(errorCode);
+    ioModule->logError(errorCode);
     skipTo(block);
   }
 }
@@ -175,7 +176,7 @@ shared_ptr<Identifier> SyntaxAnalyzer::getIdent() {
   auto identifier = semancer->findIdentifier(semancer->getLocalScope(), identName);
   if (identifier == nullptr) {
     /* имя не описано */
-    lexer->getIOModule()->logError(14, identName.size());
+    ioModule->logError(14, identName.size());
     identifier = make_shared<Identifier>(identName, VAR_CLASS, move(make_shared<Type>(UNKNOWN_TYPE)));
     semancer->getLocalScope()->addIdentifier(identifier);
   }
@@ -348,7 +349,7 @@ void SyntaxAnalyzer::assigmentOperator(const set<enum TokenCode> &followBlock) {
 
     /* Обработка ссылочного типа */
     if (varType->getTypeName() == REFERENCE_TYPE && currentToken->getCode() != arrow) {
-      lexer->getIOModule()->logError(401);
+      ioModule->logError(401);
     }
     if (currentToken->getCode() == arrow)
       accept(arrow);
@@ -367,7 +368,7 @@ void SyntaxAnalyzer::ifOperator(const set<enum TokenCode> &followBlock) {
     auto thenSet = unionOf(thenSy, followBlock);
     auto type = expression(thenSet);
     if (type == nullptr)
-      lexer->getIOModule()->logError(401);
+      ioModule->logError(401);
 
     accept(thenSy);
     auto elseSet = unionOf(elseSy, followBlock);
@@ -385,7 +386,7 @@ void SyntaxAnalyzer::whileOperator(const set<enum TokenCode> &followBlock) {
     accept(whileSy);
     auto type = expression(unionOf(doSy, followBlock));
     if (type == nullptr)
-      lexer->getIOModule()->logError(401);
+      ioModule->logError(401);
     accept(doSy);
     operatorRecognition(followBlock);
   }
@@ -399,7 +400,7 @@ void SyntaxAnalyzer::caseOperator(const set<enum TokenCode> &followBlock) {
     /* case of */
     auto type = expression(unionOf(ofSy, followBlock));
     if (type == nullptr)
-      lexer->getIOModule()->logError(401);
+      ioModule->logError(401);
     accept(ofSy);
 
     /* case end */
@@ -421,7 +422,7 @@ void SyntaxAnalyzer::caseVariants(const set<enum TokenCode> &followBlock, EType 
   if (isSymbolBelongTo(expressionWithAdditiveCodeSet)) {
     auto type = constRecognition(unionOf(colon, followBlock));
     if (type == nullptr || type->getTypeName() != followType)
-      lexer->getIOModule()->logError(401);
+      ioModule->logError(401);
     /* Варианты через запятую */
     while (currentToken->getCode() == comma) {
       accept(comma);
@@ -439,7 +440,7 @@ shared_ptr<Type> SyntaxAnalyzer::variable(const set<enum TokenCode> &followBlock
   if (currentToken->getCode() == ident) {
     auto identifier = getIdent();
     if (identifier->getIdentClass() == CONST_CLASS)
-      lexer->getIOModule()->logError(400);
+      ioModule->logError(400);
     type = identifier->getType();
     accept(ident);
   }
@@ -450,7 +451,7 @@ shared_ptr<Type> SyntaxAnalyzer::expression(const set<enum TokenCode> &followBlo
   shared_ptr<Type> type = nullptr;
   auto exprSet = unionOf(leftPar, expressionWithAdditiveCodeSet);
   if (!isSymbolBelongTo(exprSet)) {
-    lexer->getIOModule()->logError(23, currentToken->toString().size());
+    ioModule->logError(23, currentToken->toString().size());
     skipTo(unionOf(exprSet, followBlock));
   }
   if (isSymbolBelongTo(exprSet)) {
@@ -484,7 +485,7 @@ shared_ptr<Type> SyntaxAnalyzer::simpleExpression(const set<enum TokenCode> &fol
     type = term(simpleExprWithOr);
     if (type != nullptr) {
       if (type->getTypeName() == REFERENCE_TYPE && currentToken->getCode() != arrow) {
-        lexer->getIOModule()->logError(401);
+        ioModule->logError(401);
       }
       if (currentToken->getCode() == arrow)
         accept(arrow);
@@ -545,7 +546,7 @@ shared_ptr<Type> SyntaxAnalyzer::factor(const set<enum TokenCode> &followBlock) 
         type = factor(followBlock);
         if (type->getTypeName() != BOOLEAN_TYPE)
           /* операнды AND, NOT, OR должны быть булевыми */
-          lexer->getIOModule()->logError(210);
+          ioModule->logError(210);
         break;
       case intConst:
         type = make_shared<IntType>();
@@ -576,7 +577,7 @@ shared_ptr<Type> SyntaxAnalyzer::factor(const set<enum TokenCode> &followBlock) 
         } else {
           identifier = make_shared<Identifier>(identName, VAR_CLASS, make_unique<Type>(UNKNOWN_TYPE));
           semancer->findDuplicateOrAddIdentifier(identName, identifier);
-          lexer->getIOModule()->logError(14);
+          ioModule->logError(14);
           accept(ident);
         }
         break;
