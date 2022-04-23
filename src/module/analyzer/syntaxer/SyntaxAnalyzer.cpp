@@ -228,6 +228,7 @@ void SyntaxAnalyzer::varDescription() {
     accept(colon);
     auto kek = currentToken->toString();
     auto varType = typeRecognition();
+    auto kekf = varType->getTypeName();
 
     for (const auto &ident: variables) {
       ident->setType(varType);
@@ -256,8 +257,27 @@ shared_ptr<Type> SyntaxAnalyzer::referenceType() {
   accept(arrow);
   string identName = currentToken->toString();
   type = semancer->findType(semancer->getLocalScope(), identName);
-  if (type == nullptr)
+  if (type == nullptr) {
     getIdent();
+    accept(ident);
+  } else {
+    switch (type->getTypeName()) {
+      case INT_TYPE:
+        type = make_shared<ReferenceType>(make_shared<IntType>());
+        break;
+      case REAL_TYPE:
+        type = make_shared<ReferenceType>(make_shared<RealType>());
+        break;
+      case STRING_TYPE:
+        type = make_shared<ReferenceType>(make_shared<StringType>());
+        break;
+      case BOOLEAN_TYPE:
+        type = make_shared<ReferenceType>(make_shared<BooleanType>());
+        break;
+      default:
+        break;
+    }
+  }
   accept(ident);
   return type;
 }
@@ -267,8 +287,10 @@ shared_ptr<Type> SyntaxAnalyzer::simpleType() {
   if (currentToken->getCode() == ident) {
     string identName = currentToken->toString();
     type = semancer->findType(semancer->getLocalScope(), identName);
-    if (type == nullptr)
+    if (type == nullptr) {
       getIdent();
+      accept(ident);
+    }
     accept(ident);
   }
   return type;
@@ -310,6 +332,8 @@ void SyntaxAnalyzer::compoundOperator(const set<enum TokenCode> &followBlock) {
     accept(beginSy);
     while (isSymbolBelongTo(operatorCodeSet)) {
       operatorRecognition(unionOf(finishCodeSet, followBlock));
+      if (currentToken->getCode() == arrow)
+        accept(arrow);
       accept(semicolon);
     }
     accept(endSy);
@@ -322,10 +346,17 @@ void SyntaxAnalyzer::assigmentOperator(const set<enum TokenCode> &followBlock) {
     string identName = currentToken->toString();
     auto varType = variable(unionOf(assign, followBlock));
 
+    /* Обработка ссылочного типа */
+    if (varType->getTypeName() == REFERENCE_TYPE && currentToken->getCode() != arrow) {
+      lexer->getIOModule()->logError(401);
+    }
+    if (currentToken->getCode() == arrow)
+      accept(arrow);
+
     accept(assign);
 
     auto exprType = expression(followBlock);
-    semancer->analyzeAssigment(varType->getTypeName(), exprType->getTypeName());
+    semancer->analyzeAssigment(varType, exprType);
   }
 }
 
@@ -411,10 +442,6 @@ shared_ptr<Type> SyntaxAnalyzer::variable(const set<enum TokenCode> &followBlock
       lexer->getIOModule()->logError(400);
     type = identifier->getType();
     accept(ident);
-
-    //todo ref
-    if (currentToken->getCode() == arrow)
-      accept(arrow);
   }
   return type;
 }
@@ -434,9 +461,6 @@ shared_ptr<Type> SyntaxAnalyzer::expression(const set<enum TokenCode> &followBlo
       scanNextToken();
       auto secondType = simpleExpression(followBlock);
       type = semancer->analyzeRelations(type->getTypeName(), secondType->getTypeName());
-      if (type == nullptr)
-        /* несоответствие типов для операции отношения */
-        lexer->getIOModule()->logError(186);
     }
   }
   return type;
@@ -458,6 +482,13 @@ shared_ptr<Type> SyntaxAnalyzer::simpleExpression(const set<enum TokenCode> &fol
     /* Добавляем оператор "or" */
     auto simpleExprWithOr = unionOf(orSy, additiveCodeSet);
     type = term(simpleExprWithOr);
+    if (type != nullptr) {
+      if (type->getTypeName() == REFERENCE_TYPE && currentToken->getCode() != arrow) {
+        lexer->getIOModule()->logError(401);
+      }
+      if (currentToken->getCode() == arrow)
+        accept(arrow);
+    }
 
     if (isTermWithSign)
       semancer->checkRightTerm(type);
@@ -467,8 +498,8 @@ shared_ptr<Type> SyntaxAnalyzer::simpleExpression(const set<enum TokenCode> &fol
       auto operation = currentToken->getCode();
       scanNextToken();
       auto secondType = term(simpleExprWithOr);
-      type = semancer->analyzeAdditive(type->getTypeName(),
-                                       secondType->getTypeName(),
+      type = semancer->analyzeAdditive(type,
+                                       secondType,
                                        operation,
                                        static_cast<int>(currentToken->toString().size()));
     }
@@ -489,8 +520,8 @@ shared_ptr<Type> SyntaxAnalyzer::term(const set<enum TokenCode> &followBlock) {
       auto operation = currentToken->getCode();
       scanNextToken();
       auto secondType = factor(multiplicativeFollow);
-      type = semancer->analyzeMultiplicative(type->getTypeName(),
-                                             secondType->getTypeName(),
+      type = semancer->analyzeMultiplicative(type,
+                                             secondType,
                                              operation,
                                              static_cast<int>(currentToken->toString().size()));
     }

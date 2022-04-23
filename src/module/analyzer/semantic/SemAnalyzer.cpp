@@ -24,20 +24,47 @@ void SemAnalyzer::initTypes() {
   scope->addIdentifier(
       make_shared<Identifier>("boolean", TYPE_CLASS, make_unique<BooleanType>())
   );
+  scope->addIdentifier(
+      make_shared<Identifier>("true", CONST_CLASS, make_unique<BooleanType>())
+  );
+  scope->addIdentifier(
+      make_shared<Identifier>("false", CONST_CLASS, make_unique<BooleanType>())
+  );
 }
 
 shared_ptr<Scope> SemAnalyzer::getLocalScope() {
   return scope;
 }
 
-void SemAnalyzer::analyzeAssigment(EType _varType, EType _exprType) {
-  if (_varType == UNKNOWN_TYPE || _varType == _exprType
-      || (_varType == REAL_TYPE && (_exprType == REAL_TYPE || _exprType == INT_TYPE))
-      || (_varType == STRING_TYPE && _exprType == STRING_TYPE)) {
+void SemAnalyzer::analyzeAssigment(const shared_ptr<Type> &_varType, const shared_ptr<Type> &_exprType) {
+  if (_varType == nullptr || _exprType == nullptr) {
+    /* несоответствие типов */
+    ioModule->logError(401, 1);
+    return;
+  }
+
+  auto varTypeName = _varType->getTypeName();
+  auto varExprName = _exprType->getTypeName();
+  /* Обработка ссылочного типа */
+  varTypeName = analyzeRefType(_varType, varTypeName);
+  varTypeName = analyzeRefType(_exprType, varExprName);
+
+  if (varTypeName == UNKNOWN_TYPE || varTypeName == varExprName
+      || (varTypeName == REAL_TYPE && (varExprName == REAL_TYPE || varExprName == INT_TYPE))
+      || (varTypeName == STRING_TYPE && varExprName == STRING_TYPE)) {
     return;
   }
   /* несоответствие типов */
   ioModule->logError(401, 1);
+}
+
+EType SemAnalyzer::analyzeRefType(const shared_ptr<Type> &_varType, EType &varTypeName) const {
+  if (varTypeName == REFERENCE_TYPE) {
+    shared_ptr<ReferenceType> refType = (const shared_ptr<ReferenceType> &) (_varType);
+    /* Смотрим тип указателя */
+    varTypeName = refType->getRefType()->getTypeName();
+  }
+  return varTypeName;
 }
 
 shared_ptr<Identifier> SemAnalyzer::findIdentifier(const shared_ptr<Scope> &_findScope, const string &_identName) {
@@ -77,15 +104,24 @@ void SemAnalyzer::findDuplicateOrAddIdentifier(const string &_identName, const s
 shared_ptr<Type> SemAnalyzer::analyzeRelations(EType _type1, EType _type2) {
   if ((_type1 == INT_TYPE || _type1 == REAL_TYPE)
       && (_type2 == INT_TYPE || _type2 == REAL_TYPE)) {
-    return shared_ptr<BooleanType>();
+    return make_shared<BooleanType>();
   }
+  /* несоответствие типов для операции отношения */
+  ioModule->logError(186);
   return nullptr;
 }
 
-shared_ptr<Type> SemAnalyzer::analyzeAdditive(EType _type1, EType _type2, TokenCode _operation, int _tokenSize) {
+shared_ptr<Type> SemAnalyzer::analyzeAdditive(const shared_ptr<Type> &_type1,
+                                              const shared_ptr<Type> &_type2,
+                                              TokenCode _operation,
+                                              int _tokenSize) {
   /* Проверка аддитивных операторов */
+  auto typeOne = _type1->getTypeName();
+  auto typeTwo = _type2->getTypeName();
+  typeOne = analyzeRefType(_type1, typeOne);
+  typeTwo = analyzeRefType(_type2, typeTwo);
   if (_operation == TokenCode::plus || _operation == TokenCode::minus) {
-    auto type = analyzeNumericTypes(_type1, _type2);
+    auto type = analyzeNumericTypes(typeOne, typeTwo);
     if (type != nullptr)
       return type;
     ioModule->logError(211, _tokenSize);
@@ -93,7 +129,7 @@ shared_ptr<Type> SemAnalyzer::analyzeAdditive(EType _type1, EType _type2, TokenC
 
   /* проверка опертора orSy */
   if (_operation == orSy) {
-    if (_type1 == BOOLEAN_TYPE && _type2 == BOOLEAN_TYPE)
+    if (typeOne == BOOLEAN_TYPE && typeTwo == BOOLEAN_TYPE)
       return make_shared<BooleanType>();
     /* операнды AND, NOT, OR должны быть булевыми */
     ioModule->logError(210, _tokenSize);
@@ -101,13 +137,20 @@ shared_ptr<Type> SemAnalyzer::analyzeAdditive(EType _type1, EType _type2, TokenC
   return nullptr;
 }
 
-shared_ptr<Type> SemAnalyzer::analyzeMultiplicative(EType _type1,
-                                                    EType _type2,
+shared_ptr<Type> SemAnalyzer::analyzeMultiplicative(shared_ptr<Type> _type1,
+                                                    shared_ptr<Type> _type2,
                                                     TokenCode _operation,
                                                     int _tokenSize) {
+
+  /* Проверка аддитивных операторов */
+  auto typeOne = _type1->getTypeName();
+  auto typeTwo = _type2->getTypeName();
+  typeOne = analyzeRefType(_type1, typeOne);
+  typeTwo = analyzeRefType(_type2, typeTwo);
+
   /* Проверка оперторов div, mod */
   if (_operation == divSy || _operation == modSy) {
-    if (_type1 == INT_TYPE && _type2 == INT_TYPE)
+    if (typeOne == INT_TYPE && typeTwo == INT_TYPE)
       return make_shared<IntType>();
     /* операнды DIV и MOD должны быть целыми */
     ioModule->logError(212);
@@ -115,7 +158,7 @@ shared_ptr<Type> SemAnalyzer::analyzeMultiplicative(EType _type1,
 
   /* Проверка оперторов /, * */
   if (_operation == slash || _operation == star) {
-    auto type = analyzeNumericTypes(_type1, _type2);
+    auto type = analyzeNumericTypes(typeOne, typeTwo);
     if (type != nullptr)
       return type;
 
@@ -127,7 +170,7 @@ shared_ptr<Type> SemAnalyzer::analyzeMultiplicative(EType _type1,
 
   /* Проверка опертора andSy, * */
   if (_operation == andSy) {
-    if (_type1 == BOOLEAN_TYPE && _type2 == BOOLEAN_TYPE)
+    if (typeOne == BOOLEAN_TYPE && typeTwo == BOOLEAN_TYPE)
       return make_shared<BooleanType>();
     /* операнды AND, NOT, OR должны быть булевыми */
     ioModule->logError(210, _tokenSize);
@@ -148,6 +191,8 @@ shared_ptr<Type> SemAnalyzer::analyzeNumericTypes(EType _type1, EType _type2) {
 }
 
 void SemAnalyzer::checkRightTerm(const shared_ptr<struct Type> &_type) {
-  if (_type == nullptr || _type->getTypeName() == INT_TYPE || _type->getTypeName() == REAL_TYPE)
+  auto termType = _type->getTypeName();
+  termType = analyzeRefType(_type, termType);
+  if (_type == nullptr || termType == INT_TYPE || termType == REAL_TYPE)
     ioModule->logError(211);
 }

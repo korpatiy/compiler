@@ -40,7 +40,7 @@ class SemAnalyzer {
   /* Методы анализа */
 
   /** Анализ оператора присвания */
-  void analyzeAssigment(EType _varType, EType _exprType);
+  void analyzeAssigment(const shared_ptr<Type>& _varType, const shared_ptr<Type>& _exprType);
 
   /** Анализ для операции отношения
    * @param _type1 - левый тип
@@ -53,8 +53,8 @@ class SemAnalyzer {
    * @param _type2 - правый тип
    * @param _operation - операция между
    */
-  shared_ptr<Type> analyzeAdditive(EType _type1,
-                                   EType _type2,
+  shared_ptr<Type> analyzeAdditive(const shared_ptr<Type>& _type1,
+                                   const shared_ptr<Type>& _type2,
                                    TokenCode _operation,
                                    int _tokenSize);
 
@@ -63,8 +63,8 @@ class SemAnalyzer {
    * @param _type2 - правый тип
    * @param _operation - операция между
    */
-  shared_ptr<Type> analyzeMultiplicative(EType _type1,
-                                         EType _type2,
+  shared_ptr<Type> analyzeMultiplicative(shared_ptr<Type> _type1,
+                                         shared_ptr<Type> _type2,
                                          TokenCode _operation,
                                          int _tokenSize);
 
@@ -73,6 +73,8 @@ class SemAnalyzer {
 
   /** Проверяет правый терм в выражении или выдает ошибку */
   void checkRightTerm(const shared_ptr<struct Type> &_type);
+  /** Возвращает указатель на базовый тип с ссылочного типа */
+  EType analyzeRefType(const shared_ptr<Type> &_varType, EType &varTypeName) const;
 };
 
 #endif //COMPILER_SRC_MODULE_ANALYZER_SEMANTIC_SEMANALYZER_H_
