@@ -5,25 +5,22 @@
 using namespace std;
 
 /**
- * Типы констант
+ * Варианты констант
  */
-enum ConstType {
-  CT_INTEGER,
-  CT_REAL,
-  CT_STRING,
-  CT_BOOLEAN
+enum VariantType {
+  VT_INTEGER,
+  VT_REAL,
+  VT_STRING,
+  VT_BOOLEAN
 };
 
-/**
- * Абстрактная константа
- */
 class Variant {
  private:
-  ConstType constType;
+  VariantType variantType;
  public:
-  explicit Variant(ConstType _constType);
+  explicit Variant(VariantType _variantType);
   virtual ~Variant() = default;
-  ConstType getType();
+  VariantType getType();
   virtual string toString() = 0;
 };
 

@@ -70,12 +70,19 @@ end.
 Определим модуль-класс SyntaxAnalyzer:
 
 ```c++
+/**
+ * Модуль синтаксического анализатора
+ */
 class SyntaxAnalyzer {
  private:
   /* Лексер */
   unique_ptr<LexAnalyzer> lexer;
+  /* Семансер */
+  unique_ptr<SemAnalyzer> semancer;
   /* Текущий токен */
   shared_ptr<Token> currentToken;
+  /* Модуль ввода-вывода */
+  shared_ptr<IOModule> ioModule;
 
  public:
   explicit SyntaxAnalyzer(const string &_filePath);
@@ -110,7 +117,7 @@ class SyntaxAnalyzer {
   /* !Индивид. часть - Раздел описания констант */
   void constBlock();
   void constDescription();
-  void constRecognition(const set<enum TokenCode> &followBlock);
+  shared_ptr<Type> constRecognition(const set<enum TokenCode> &followBlock);
 
   /* Раздел описания типов */
   void typeBlock();
@@ -121,9 +128,9 @@ class SyntaxAnalyzer {
   void varDescription();
 
   /* Распознование типов */
-  void typeRecognition();
-  void referenceType();
-  void simpleType();
+  shared_ptr<Type> typeRecognition();
+  shared_ptr<Type> referenceType();
+  shared_ptr<Type> simpleType();
 
   /* Распознование операторов */
   void operatorRecognition(const set<enum TokenCode> &followBlock);
@@ -133,15 +140,16 @@ class SyntaxAnalyzer {
   void whileOperator(const set<enum TokenCode> &followBlock);
   /* !Индивид. часть - оператор выбора case */
   void caseOperator(const set<enum TokenCode> &followBlock);
+  void caseVariants(const set<enum TokenCode> &followBlock, EType followType);
 
   /* Разбор перменных и выражений */
-  void variable(const set<enum TokenCode> &followBlock);
-  void expression(const set<enum TokenCode> &followBlock);
-  void simpleExpression(const set<enum TokenCode> &followBlock);
+  shared_ptr<Type> variable(const set<enum TokenCode> &followBlock);
+  shared_ptr<Type> expression(const set<enum TokenCode> &followBlock);
+  shared_ptr<Type> simpleExpression(const set<enum TokenCode> &followBlock);
 
-  void term(const set<enum TokenCode> &followBlock);
-  void factor(const set<enum TokenCode> &followBlock);
-  void caseVariants(const set<enum TokenCode> &followBlock);
+  shared_ptr<Type> term(const set<enum TokenCode> &followBlock);
+  shared_ptr<Type> factor(const set<enum TokenCode> &followBlock);
+  shared_ptr<Identifier> getIdent();
 };
 ```
 
@@ -151,13 +159,13 @@ class SyntaxAnalyzer {
 Структуру программы обрабаывает метод program():
 - Обработка заголовка;
 - Обработка раздела описания - descriptionSection();
-    - (Индивид часть) Блок констант - constBlock();
+    - __(!Индивид часть)__ Блок констант - constBlock();
         - Описание констант - constDescription();
             - Распознование констант - constRecognition();
     - Блок типов - typeBlock();
         - Описание типов - typeDescription();
             - Распознование типов - typeRecognition();
-                - (Индивид часть) Ссылочный тип - referenceType();
+                - __(!Индивид часть)__ Ссылочный тип - referenceType();
                 - Простой тип - simpleType();
     - Блок перменных - varBlock();
         - Описание перменных - varDescription();
@@ -177,7 +185,7 @@ class SyntaxAnalyzer {
         - Оператор цикла с предусловием - whileOperator();
             - -> expression();
             - -> operatorRecognition();
-        - (Индивид часть) Оператор выбора - caseOperator();
+        - __(!Индивид часть)__ Оператор выбора - caseOperator();
             - -> expression();
             - Варианты - caseVariants();
                 - -> constRecognition();
@@ -526,7 +534,7 @@ var
          ^
 *** (Код - 104) должен идти символ  ';', строка - 13, позиция - 9
           ^
-*** (Код - 22) ошибка в разделе операторов, строка - 13, позиция - 10
+*** (Код - 18) ошибка в разделе описаний, строка - 13, позиция - 10
   r : real;
   s : string;
   flag  boolean;

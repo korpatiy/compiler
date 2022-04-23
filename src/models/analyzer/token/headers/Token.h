@@ -2,7 +2,7 @@
 #define COMPILER_SRC_ANALYZERS_TOKEN_H_
 #include <memory>
 #include "Variant.h"
-#include "../../codes/TokenCode.h"
+#include "../../../codes/TokenCode.h"
 using namespace std;
 
 /**

@@ -10,7 +10,7 @@ int main() {
   SetConsoleOutputCP(CP_UTF8);
   setlocale(LC_ALL, "Russian");
 
-  auto analyzer = make_unique<SyntaxAnalyzer>("C:/Users/Slava/Desktop/compiler/src/hello.txt");
+  auto analyzer = make_unique<SyntaxAnalyzer>("C:/Users/Slava/Desktop/compiler/src/semantic.txt");
   analyzer->start();
 
   return 0;

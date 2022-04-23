@@ -1,7 +1,7 @@
 #ifndef COMPILER_SRC_ANALYZERS_LEXANALYZER_H_
 #define COMPILER_SRC_ANALYZERS_LEXANALYZER_H_
 #include "../../io/IOModule.h"
-#include "../../../models/analyzer/headers/Token.h"
+#include "../../../models/analyzer/token/headers/Token.h"
 #include <string>
 #include <memory>
 using namespace std;
